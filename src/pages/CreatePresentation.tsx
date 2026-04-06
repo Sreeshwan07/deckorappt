@@ -15,9 +15,9 @@ import { templateList } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
 
 const tones = [
-  { value: "professional", label: "Professional", icon: Briefcase },
-  { value: "creative", label: "Creative", icon: Palette },
-  { value: "educational", label: "Educational", icon: GraduationCap },
+  { value: "professional", label: "Professional", icon: Briefcase, desc: "Clean & corporate" },
+  { value: "creative", label: "Creative", icon: Palette, desc: "Bold & visual" },
+  { value: "educational", label: "Educational", icon: GraduationCap, desc: "Clear & structured" },
 ];
 
 export default function CreatePresentation() {
@@ -33,57 +33,33 @@ export default function CreatePresentation() {
   const handleGenerate = async () => {
     if (!topic.trim() || !user) return;
     setGenerating(true);
-
     try {
-      // 1. Create presentation record
       const { data: pres, error: presError } = await supabase
         .from("presentations")
-        .insert({
-          user_id: user.id,
-          title: topic.trim(),
-          topic: topic.trim(),
-          num_slides: numSlides,
-          tone,
-          template,
-          status: "generating",
-        })
+        .insert({ user_id: user.id, title: topic.trim(), topic: topic.trim(), num_slides: numSlides, tone, template, status: "generating" })
         .select()
         .single();
-
       if (presError) throw presError;
 
-      // 2. Call AI edge function
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
         body: { topic: topic.trim(), numSlides, tone, template },
       });
-
       if (aiError) throw aiError;
 
       const slides = aiData?.slides || [];
-
-      // 3. Insert slides
       if (slides.length > 0) {
         const slideRows = slides.map((s: { title: string; bullets: string[]; notes?: string }, i: number) => ({
-          presentation_id: pres.id,
-          slide_order: i,
-          title: s.title,
-          content: JSON.stringify(s.bullets || []),
-          speaker_notes: s.notes || null,
+          presentation_id: pres.id, slide_order: i, title: s.title, content: JSON.stringify(s.bullets || []), speaker_notes: s.notes || null,
         }));
-
         const { error: slidesError } = await supabase.from("slides").insert(slideRows);
         if (slidesError) throw slidesError;
       }
 
-      // 4. Update status
       await supabase.from("presentations").update({ status: "ready" }).eq("id", pres.id);
-
       toast({ title: "Presentation generated!" });
       navigate(`/editor/${pres.id}`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Generation failed";
-      toast({ title: "Error", description: message, variant: "destructive" });
-
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Generation failed", variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -93,11 +69,10 @@ export default function CreatePresentation() {
     <AppLayout>
       <div className="max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h2 className="text-2xl font-bold text-foreground mb-1">Create Presentation</h2>
+          <h2 className="text-2xl font-bold font-display text-foreground mb-1">Create Presentation</h2>
           <p className="text-muted-foreground mb-8">Enter your topic and let AI generate professional slides</p>
 
           <div className="space-y-8">
-            {/* Topic */}
             <div className="space-y-2">
               <Label htmlFor="topic" className="text-base font-semibold">Topic</Label>
               <Textarea
@@ -105,29 +80,18 @@ export default function CreatePresentation() {
                 placeholder="e.g. Artificial Intelligence in Healthcare: Trends and Future"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                className="min-h-[80px] text-base"
+                className="min-h-[80px] text-base bg-secondary/30 border-border"
                 maxLength={500}
               />
               <p className="text-xs text-muted-foreground">{topic.length}/500</p>
             </div>
 
-            {/* Slide count */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Number of Slides: {numSlides}</Label>
-              <Slider
-                value={[numSlides]}
-                onValueChange={([v]) => setNumSlides(v)}
-                min={5}
-                max={15}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>5</span><span>10</span><span>15</span>
-              </div>
+              <Label className="text-base font-semibold">Number of Slides: <span className="text-primary">{numSlides}</span></Label>
+              <Slider value={[numSlides]} onValueChange={([v]) => setNumSlides(v)} min={5} max={20} step={1} className="w-full" />
+              <div className="flex justify-between text-xs text-muted-foreground"><span>5</span><span>10</span><span>15</span><span>20</span></div>
             </div>
 
-            {/* Tone */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Tone</Label>
               <div className="grid grid-cols-3 gap-3">
@@ -136,20 +100,18 @@ export default function CreatePresentation() {
                     key={t.value}
                     onClick={() => setTone(t.value)}
                     className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                      tone === t.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/30"
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                      tone === t.value ? "border-primary bg-primary/10 glow-purple-sm" : "border-border bg-secondary/20 hover:border-primary/30"
                     )}
                   >
                     <t.icon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium">{t.label}</span>
+                    <span className="text-sm font-medium text-foreground">{t.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{t.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Template */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Template</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -158,13 +120,10 @@ export default function CreatePresentation() {
                     key={t.id}
                     onClick={() => setTemplate(t.id)}
                     className={cn(
-                      "rounded-xl border-2 transition-all text-left overflow-hidden",
-                      template === t.id
-                        ? "border-primary shadow-lg"
-                        : "border-border hover:border-primary/30"
+                      "rounded-xl border transition-all text-left overflow-hidden",
+                      template === t.id ? "border-primary glow-purple-sm" : "border-border hover:border-primary/30"
                     )}
                   >
-                    {/* Mini preview */}
                     <div className="slide-preview w-full">
                       <SlideRenderer
                         slide={{ title: t.name, content: [t.description] }}
@@ -174,7 +133,7 @@ export default function CreatePresentation() {
                         className="w-full h-full text-[3.5px]"
                       />
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 bg-card">
                       <span className="text-xs font-semibold text-foreground">{t.name}</span>
                     </div>
                   </button>
@@ -182,24 +141,11 @@ export default function CreatePresentation() {
               </div>
             </div>
 
-            {/* Generate button */}
-            <Button
-              variant="gradient"
-              size="lg"
-              className="w-full"
-              onClick={handleGenerate}
-              disabled={generating || !topic.trim()}
-            >
+            <Button variant="gradient" size="lg" className="w-full glow-purple" onClick={handleGenerate} disabled={generating || !topic.trim()}>
               {generating ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Generating slides...
-                </>
+                <><Loader2 className="h-5 w-5 animate-spin" />Generating slides...</>
               ) : (
-                <>
-                  <Sparkles className="h-5 w-5" />
-                  Generate Presentation
-                </>
+                <><Sparkles className="h-5 w-5" />Generate Presentation</>
               )}
             </Button>
           </div>
