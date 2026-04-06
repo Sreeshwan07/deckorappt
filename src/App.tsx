@@ -26,7 +26,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePresentation /></ProtectedRoute>} />
             <Route path="/editor/:id" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
-            <Route path="/preview/:id" element={<Navigate to="/editor/:id" replace />} />
+            {/* Old /preview/:id routes will 404 - use /editor/:id */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
