@@ -109,7 +109,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className="group glass-card rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer"
-                onClick={() => navigate(`/preview/${pres.id}`)}
+                onClick={() => navigate(`/editor/${pres.id}`)}
               >
                 {/* Slide-shaped thumbnail */}
                 <div className="slide-preview rounded-xl bg-muted mb-4 flex items-center justify-center overflow-hidden">
@@ -134,8 +134,8 @@ export default function Dashboard() {
 
                 {/* Hover actions */}
                 <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); navigate(`/preview/${pres.id}`); }}>
-                    <Eye className="h-3 w-3" /> Preview
+                  <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${pres.id}`); }}>
+                    <Eye className="h-3 w-3" /> Edit
                   </Button>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deletePresentation(pres.id); }}>
                     <Trash2 className="h-3 w-3 text-destructive" />
