@@ -5,27 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, Rocket, Monitor, BookOpen } from "lucide-react";
+import { Loader2, Sparkles, Briefcase, Palette, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { templateList } from "@/lib/templates";
+import SlideRenderer from "@/components/SlideRenderer";
 
 const tones = [
   { value: "professional", label: "Professional", icon: Briefcase },
   { value: "creative", label: "Creative", icon: Palette },
   { value: "educational", label: "Educational", icon: GraduationCap },
-];
-
-const templates = [
-  { value: "business", label: "Business Professional", icon: Briefcase, desc: "Clean corporate look" },
-  { value: "minimal", label: "Minimal Elegant", icon: Palette, desc: "Simple modern slides" },
-  { value: "startup", label: "Startup Pitch", icon: Rocket, desc: "Bold headings" },
-  { value: "tech", label: "Tech Dark", icon: Monitor, desc: "Modern dark style" },
-  { value: "academic", label: "Academic", icon: BookOpen, desc: "Formal structure" },
-  { value: "creative", label: "Creative Colorful", icon: Palette, desc: "For students" },
 ];
 
 export default function CreatePresentation() {
@@ -87,7 +79,7 @@ export default function CreatePresentation() {
       await supabase.from("presentations").update({ status: "ready" }).eq("id", pres.id);
 
       toast({ title: "Presentation generated!" });
-      navigate(`/preview/${pres.id}`);
+      navigate(`/editor/${pres.id}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Generation failed";
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -161,20 +153,30 @@ export default function CreatePresentation() {
             <div className="space-y-3">
               <Label className="text-base font-semibold">Template</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {templates.map((t) => (
+                {templateList.map((t) => (
                   <button
-                    key={t.value}
-                    onClick={() => setTemplate(t.value)}
+                    key={t.id}
+                    onClick={() => setTemplate(t.id)}
                     className={cn(
-                      "flex flex-col items-start gap-1.5 p-4 rounded-xl border-2 transition-all text-left",
-                      template === t.value
-                        ? "border-primary bg-primary/5"
+                      "rounded-xl border-2 transition-all text-left overflow-hidden",
+                      template === t.id
+                        ? "border-primary shadow-lg"
                         : "border-border hover:border-primary/30"
                     )}
                   >
-                    <t.icon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-semibold">{t.label}</span>
-                    <span className="text-xs text-muted-foreground">{t.desc}</span>
+                    {/* Mini preview */}
+                    <div className="slide-preview w-full">
+                      <SlideRenderer
+                        slide={{ title: t.name, content: [t.description] }}
+                        templateId={t.id}
+                        slideIndex={0}
+                        totalSlides={1}
+                        className="w-full h-full text-[3.5px]"
+                      />
+                    </div>
+                    <div className="p-2">
+                      <span className="text-xs font-semibold text-foreground">{t.name}</span>
+                    </div>
                   </button>
                 ))}
               </div>
