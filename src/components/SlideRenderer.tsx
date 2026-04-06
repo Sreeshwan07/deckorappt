@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { templates, type TemplateConfig } from "@/lib/templates";
+import { templates } from "@/lib/templates";
 
 interface SlideData {
   title: string;
@@ -25,8 +25,6 @@ export default function SlideRenderer({
   slideIndex,
   totalSlides,
   isTitle,
-  showWatermark,
-  scale,
   onClick,
   className,
 }: SlideRendererProps) {
@@ -39,24 +37,15 @@ export default function SlideRenderer({
   return (
     <div
       onClick={onClick}
-      className={cn(
-        "relative overflow-hidden select-none",
-        className
-      )}
-      style={scale ? { transform: `scale(${scale})`, transformOrigin: "top left" } : undefined}
+      className={cn("relative overflow-hidden select-none", className)}
     >
       <div className={cn("w-full h-full flex flex-col justify-center rounded-xl", bg)}>
-        {/* Accent line at top */}
         {!isTitleSlide && (
           <div className={cn("absolute top-0 left-0 right-0 h-1", t.accentLine)} />
         )}
 
         <div className={cn("flex-1 flex flex-col justify-center", isTitleSlide ? "p-[8%] text-center items-center" : "p-[6%]")}>
-          <h2 className={cn(
-            "font-bold leading-tight mb-4",
-            titleClr,
-            isTitleSlide ? "text-[2.2em]" : "text-[1.6em]"
-          )}>
+          <h2 className={cn("font-bold leading-tight mb-4", titleClr, isTitleSlide ? "text-[2.2em]" : "text-[1.6em]")}>
             {slide.title}
           </h2>
 
@@ -74,19 +63,9 @@ export default function SlideRenderer({
           )}
         </div>
 
-        {/* Slide number */}
-        <div className={cn("absolute bottom-3 right-5 text-[0.55em] opacity-40", textClr)}>
+        <div className={cn("absolute bottom-3 right-5 text-[0.55em] opacity-30", textClr)}>
           {slideIndex + 1} / {totalSlides}
         </div>
-
-        {/* Watermark */}
-        {showWatermark && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="text-[3em] font-bold opacity-[0.06] rotate-[-25deg] select-none text-foreground">
-              PREVIEW
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

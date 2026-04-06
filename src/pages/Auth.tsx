@@ -6,7 +6,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Presentation, Mail, Lock, Loader2 } from "lucide-react";
+import { Presentation, Mail, Lock, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
@@ -21,7 +21,7 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center cosmic-bg">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -33,69 +33,57 @@ export default function Auth() {
     e.preventDefault();
     if (!email || !password) return;
     setSubmitting(true);
-
-    const { error } = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password);
-
+    const { error } = isLogin ? await signIn(email, password) : await signUp(email, password);
     setSubmitting(false);
-
     if (error) {
-      toast({
-        title: isLogin ? "Login failed" : "Sign up failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: isLogin ? "Login failed" : "Sign up failed", description: error.message, variant: "destructive" });
     } else if (!isLogin) {
-      toast({
-        title: "Check your email",
-        description: "We sent you a confirmation link.",
-      });
+      toast({ title: "Check your email", description: "We sent you a confirmation link." });
     }
   };
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
       if (result.error) {
-        toast({
-          title: "Google sign-in failed",
-          description: result.error instanceof Error ? result.error.message : "Something went wrong",
-          variant: "destructive",
-        });
+        toast({ title: "Google sign-in failed", description: result.error instanceof Error ? result.error.message : "Something went wrong", variant: "destructive" });
       }
       if (result.redirected) return;
-    } catch (err) {
-      toast({
-        title: "Google sign-in failed",
-        description: "Could not connect to Google",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Google sign-in failed", description: "Could not connect to Google", variant: "destructive" });
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex cosmic-bg">
       {/* Left branding */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-primary items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 gradient-primary opacity-20" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full bg-accent/10 blur-[80px]" />
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-md text-center"
+          transition={{ duration: 0.7 }}
+          className="relative max-w-md text-center z-10"
         >
           <div className="flex items-center justify-center gap-3 mb-8">
-            <Presentation className="h-12 w-12 text-primary-foreground" />
-            <h1 className="text-4xl font-bold text-primary-foreground">SlideAI</h1>
+            <div className="p-3 rounded-2xl gradient-primary glow-purple">
+              <Presentation className="h-10 w-10 text-primary-foreground" />
+            </div>
           </div>
-          <p className="text-lg text-primary-foreground/80">
+          <h1 className="text-5xl font-bold font-display gradient-text mb-4">SlideAI</h1>
+          <p className="text-lg text-muted-foreground leading-relaxed">
             Create stunning presentations in seconds with AI. Professional slides, zero effort.
           </p>
+          <div className="flex items-center justify-center gap-6 mt-10 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />AI-Powered</div>
+            <div className="flex items-center gap-2"><span className="text-primary">✦</span>6 Templates</div>
+            <div className="flex items-center gap-2"><span className="text-primary">↓</span>PPTX Export</div>
+          </div>
         </motion.div>
       </div>
 
@@ -107,29 +95,28 @@ export default function Auth() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-sm"
         >
-          <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-            <Presentation className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold gradient-text">SlideAI</span>
+          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
+            <div className="p-2 rounded-xl gradient-primary">
+              <Presentation className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="text-2xl font-bold font-display gradient-text">SlideAI</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-foreground mb-1">
+          <h2 className="text-2xl font-bold font-display text-foreground mb-1">
             {isLogin ? "Welcome back" : "Create account"}
           </h2>
           <p className="text-muted-foreground mb-6">
-            {isLogin ? "Sign in to your account" : "Start creating amazing presentations"}
+            {isLogin ? "Sign in to continue creating" : "Start creating amazing presentations"}
           </p>
 
-          {/* Google */}
           <Button
             variant="outline"
             size="lg"
-            className="w-full mb-4"
+            className="w-full mb-4 bg-secondary/50 border-border hover:bg-secondary"
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
           >
-            {googleLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
+            {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -154,36 +141,17 @@ export default function Auth() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
+                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-secondary/30 border-border" required />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  minLength={6}
-                  required
-                />
+                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 bg-secondary/30 border-border" minLength={6} required />
               </div>
             </div>
-
-            <Button type="submit" variant="gradient" size="lg" className="w-full" disabled={submitting}>
+            <Button type="submit" variant="gradient" size="lg" className="w-full glow-purple-sm" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {isLogin ? "Sign In" : "Create Account"}
             </Button>
@@ -191,10 +159,7 @@ export default function Auth() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="font-medium text-primary hover:underline"
-            >
+            <button onClick={() => setIsLogin(!isLogin)} className="font-medium text-primary hover:underline">
               {isLogin ? "Sign Up" : "Sign In"}
             </button>
           </p>
