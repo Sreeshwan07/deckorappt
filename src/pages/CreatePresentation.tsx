@@ -5,27 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, Rocket, Monitor, BookOpen } from "lucide-react";
+import { Loader2, Sparkles, Briefcase, Palette, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { templateList } from "@/lib/templates";
+import SlideRenderer from "@/components/SlideRenderer";
 
 const tones = [
   { value: "professional", label: "Professional", icon: Briefcase },
   { value: "creative", label: "Creative", icon: Palette },
   { value: "educational", label: "Educational", icon: GraduationCap },
-];
-
-const templates = [
-  { value: "business", label: "Business Professional", icon: Briefcase, desc: "Clean corporate look" },
-  { value: "minimal", label: "Minimal Elegant", icon: Palette, desc: "Simple modern slides" },
-  { value: "startup", label: "Startup Pitch", icon: Rocket, desc: "Bold headings" },
-  { value: "tech", label: "Tech Dark", icon: Monitor, desc: "Modern dark style" },
-  { value: "academic", label: "Academic", icon: BookOpen, desc: "Formal structure" },
-  { value: "creative", label: "Creative Colorful", icon: Palette, desc: "For students" },
 ];
 
 export default function CreatePresentation() {
