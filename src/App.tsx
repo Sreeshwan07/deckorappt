@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreatePresentation from "./pages/CreatePresentation";
-import PreviewPresentation from "./pages/PreviewPresentation";
+import SlideEditor from "./pages/SlideEditor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +25,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePresentation /></ProtectedRoute>} />
-            <Route path="/preview/:id" element={<ProtectedRoute><PreviewPresentation /></ProtectedRoute>} />
+            <Route path="/editor/:id" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
+            <Route path="/preview/:id" element={<Navigate to="/editor/:id" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
