@@ -30,6 +30,7 @@ Return a JSON object with a "slides" array. Each slide must have:
 - "title": a clear, concise title
 - "bullets": array of 3-5 bullet points (short, impactful statements)
 - "notes": optional speaker notes (1-2 sentences)
+- "image_prompt": a short visual description for an AI image generator (e.g. "modern office with data analytics dashboard", "team collaborating around a whiteboard"). Make it vivid and specific to the slide topic.
 
 The first slide should be a title slide with the presentation title and subtitle as bullets.
 The last slide should be a summary/conclusion or Q&A slide.
@@ -65,8 +66,9 @@ Return ONLY valid JSON, no markdown.`;
                         title: { type: "string" },
                         bullets: { type: "array", items: { type: "string" } },
                         notes: { type: "string" },
+                        image_prompt: { type: "string", description: "Short visual description for AI image generation" },
                       },
-                      required: ["title", "bullets"],
+                      required: ["title", "bullets", "image_prompt"],
                     },
                   },
                 },

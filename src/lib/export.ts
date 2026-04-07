@@ -5,6 +5,7 @@ interface SlideData {
   title: string;
   content: string[];
   speaker_notes?: string | null;
+  image_url?: string | null;
 }
 
 export async function exportToPptx(
@@ -18,25 +19,28 @@ export async function exportToPptx(
   pptx.layout = "LAYOUT_WIDE";
   pptx.title = presentationTitle;
 
-  slides.forEach((slide, idx) => {
+  for (let idx = 0; idx < slides.length; idx++) {
+    const slide = slides[idx];
     const pptSlide = pptx.addSlide();
     const isTitleSlide = idx === 0;
+    const hasImage = !!slide.image_url && !isTitleSlide;
 
     pptSlide.background = { color: t.exportBg.replace("#", "") };
 
     if (!isTitleSlide) {
-      // Accent line at top
       pptSlide.addShape(pptxgenjs.ShapeType.rect, {
         x: 0, y: 0, w: "100%", h: 0.06,
         fill: { color: t.exportAccentColor.replace("#", "") },
       });
     }
 
+    const textWidth = hasImage ? 7.5 : (isTitleSlide ? 11.33 : 11.73);
+
     // Title
     pptSlide.addText(slide.title, {
       x: isTitleSlide ? 1 : 0.8,
       y: isTitleSlide ? 2.0 : 0.6,
-      w: isTitleSlide ? 11.33 : 11.73,
+      w: textWidth,
       h: 1.2,
       fontSize: isTitleSlide ? 36 : 28,
       fontFace: t.fontFamily,
@@ -63,11 +67,27 @@ export async function exportToPptx(
       pptSlide.addText(bulletText as any, {
         x: isTitleSlide ? 2 : 1.2,
         y: isTitleSlide ? 3.4 : 2.0,
-        w: isTitleSlide ? 9.33 : 11.13,
+        w: hasImage ? 6.5 : (isTitleSlide ? 9.33 : 11.13),
         h: isTitleSlide ? 2.5 : 4.5,
         fontFace: t.fontFamily,
         valign: "top",
       });
+    }
+
+    // Image
+    if (hasImage && slide.image_url) {
+      try {
+        pptSlide.addImage({
+          data: slide.image_url,
+          x: 8.5,
+          y: 1.0,
+          w: 4.5,
+          h: 5.0,
+          rounding: true,
+        });
+      } catch (e) {
+        console.warn("Failed to add image to slide", idx, e);
+      }
     }
 
     // Speaker notes
@@ -83,7 +103,7 @@ export async function exportToPptx(
       align: "right",
       transparency: 50,
     });
-  });
+  }
 
   await pptx.writeFile({ fileName: `${presentationTitle}.pptx` });
 }
@@ -93,7 +113,5 @@ export async function exportToPdf(
   slides: SlideData[],
   templateId: string
 ): Promise<void> {
-  // For PDF, we generate PPTX and let user convert, or use a simple approach
-  // For now, export as PPTX (true PDF would need a server-side converter)
   await exportToPptx(presentationTitle, slides, templateId);
 }
