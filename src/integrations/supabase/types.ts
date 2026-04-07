@@ -102,6 +102,7 @@ export type Database = {
           content: Json
           created_at: string
           id: string
+          image_url: string | null
           presentation_id: string
           slide_order: number
           speaker_notes: string | null
@@ -112,6 +113,7 @@ export type Database = {
           content?: Json
           created_at?: string
           id?: string
+          image_url?: string | null
           presentation_id: string
           slide_order: number
           speaker_notes?: string | null
@@ -122,6 +124,7 @@ export type Database = {
           content?: Json
           created_at?: string
           id?: string
+          image_url?: string | null
           presentation_id?: string
           slide_order?: number
           speaker_notes?: string | null
