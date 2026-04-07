@@ -48,11 +48,23 @@ export default function CreatePresentation() {
 
       const slides = aiData?.slides || [];
       if (slides.length > 0) {
-        const slideRows = slides.map((s: { title: string; bullets: string[]; notes?: string }, i: number) => ({
+        const slideRows = slides.map((s: { title: string; bullets: string[]; notes?: string; image_prompt?: string }, i: number) => ({
           presentation_id: pres.id, slide_order: i, title: s.title, content: JSON.stringify(s.bullets || []), speaker_notes: s.notes || null,
         }));
-        const { error: slidesError } = await supabase.from("slides").insert(slideRows);
+        const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
         if (slidesError) throw slidesError;
+
+        // Fire off image generation for non-title slides (don't await - let it happen in background)
+        if (insertedSlides) {
+          insertedSlides.slice(1).forEach((dbSlide: any, idx: number) => {
+            const aiSlide = slides[idx + 1];
+            if (aiSlide?.image_prompt) {
+              supabase.functions.invoke("generate-slide-image", {
+                body: { prompt: aiSlide.image_prompt, slideId: dbSlide.id },
+              }).catch(console.error);
+            }
+          });
+        }
       }
 
       await supabase.from("presentations").update({ status: "ready" }).eq("id", pres.id);
