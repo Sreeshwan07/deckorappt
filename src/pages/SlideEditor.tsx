@@ -2,15 +2,17 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SlideRenderer from "@/components/SlideRenderer";
 import { templates } from "@/lib/templates";
 import { exportToPptx } from "@/lib/export";
+import { isAdminUser } from "@/lib/admin";
 import {
   ArrowLeft, Plus, Trash2, Download, Loader2, Pencil, Check, X,
-  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText,
+  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ interface Slide {
   title: string;
   content: string[];
   speaker_notes: string | null;
+  image_url: string | null;
 }
 
 interface PresentationData {
@@ -35,6 +38,7 @@ export default function SlideEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [presentation, setPresentation] = useState<PresentationData | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -46,7 +50,10 @@ export default function SlideEditor() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [generatingImage, setGeneratingImage] = useState<string | null>(null);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isAdmin = isAdminUser(user?.email);
 
   useEffect(() => {
     if (!id) return;
@@ -65,9 +72,10 @@ export default function SlideEditor() {
     }
     setPresentation(presResult.data);
     setSlides(
-      (slidesResult.data || []).map((s) => ({
+      (slidesResult.data || []).map((s: any) => ({
         ...s,
         content: Array.isArray(s.content) ? (s.content as string[]) : typeof s.content === "string" ? JSON.parse(s.content) : [],
+        image_url: s.image_url || null,
       }))
     );
     setLoading(false);
@@ -99,7 +107,7 @@ export default function SlideEditor() {
       .insert({ presentation_id: id, slide_order: order, title: "New Slide", content: JSON.stringify(["Add your content here"]) })
       .select().single();
     if (error || !data) return;
-    setSlides([...slides, { ...data, content: ["Add your content here"] }]);
+    setSlides([...slides, { ...data, content: ["Add your content here"], image_url: null }]);
     setCurrentSlide(order);
   };
 
@@ -130,8 +138,42 @@ export default function SlideEditor() {
     toast({ title: `Theme: ${templates[templateId]?.name}` });
   };
 
+  const generateImageForSlide = async (idx: number) => {
+    const slide = slides[idx];
+    if (!slide) return;
+    setGeneratingImage(slide.id);
+    try {
+      const prompt = `${slide.title}: ${slide.content.slice(0, 2).join(", ")}`;
+      const { data, error } = await supabase.functions.invoke("generate-slide-image", {
+        body: { prompt, slideId: slide.id },
+      });
+      if (error) throw error;
+      if (data?.image_url) {
+        setSlides((prev) => prev.map((s, i) => i === idx ? { ...s, image_url: data.image_url } : s));
+        toast({ title: "Image generated!" });
+      }
+    } catch (err) {
+      toast({ title: "Image generation failed", description: err instanceof Error ? err.message : "Try again", variant: "destructive" });
+    } finally {
+      setGeneratingImage(null);
+    }
+  };
+
+  const removeImage = async (idx: number) => {
+    const slide = slides[idx];
+    if (!slide) return;
+    await supabase.from("slides").update({ image_url: null }).eq("id", slide.id);
+    setSlides((prev) => prev.map((s, i) => i === idx ? { ...s, image_url: null } : s));
+  };
+
   const handleExport = async () => {
     if (!presentation) return;
+    // Payment check - admin bypasses
+    if (!isAdmin && !presentation.is_paid) {
+      toast({ title: "Payment required", description: "₹20 per download. Payment integration coming soon!", variant: "destructive" });
+      // When Razorpay is integrated, trigger payment here
+      // For now, allow download for testing
+    }
     setExporting(true);
     try {
       await exportToPptx(presentation.title, slides, presentation.template);
@@ -166,6 +208,9 @@ export default function SlideEditor() {
             <Presentation className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           <span className="font-semibold font-display text-foreground truncate">{presentation?.title}</span>
+          {isAdmin && (
+            <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">Admin</span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -204,7 +249,7 @@ export default function SlideEditor() {
 
           <Button variant="gradient" size="sm" onClick={handleExport} disabled={exporting} className="glow-purple-sm">
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export PPTX
+            {isAdmin ? "Export Free" : "Export PPTX"}
           </Button>
 
           <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -307,6 +352,32 @@ export default function SlideEditor() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Image controls below slide */}
+                    {currentSlide > 0 && (
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateImageForSlide(currentSlide)}
+                          disabled={generatingImage === slide.id}
+                          className="bg-secondary/30"
+                        >
+                          {generatingImage === slide.id ? (
+                            <><Loader2 className="h-4 w-4 animate-spin" /> Generating image...</>
+                          ) : slide.image_url ? (
+                            <><RefreshCw className="h-4 w-4" /> Regenerate Image</>
+                          ) : (
+                            <><ImageIcon className="h-4 w-4" /> Generate Image</>
+                          )}
+                        </Button>
+                        {slide.image_url && (
+                          <Button variant="ghost" size="sm" onClick={() => removeImage(currentSlide)} className="text-muted-foreground">
+                            <X className="h-4 w-4" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </div>
