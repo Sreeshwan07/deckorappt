@@ -50,25 +50,30 @@ export async function exportToPptx(
       valign: "middle",
     });
 
-    // Bullets
+    // Content
     if (slide.content.length > 0) {
-      const bulletText = slide.content.map((b) => ({
-        text: b,
-        options: {
-          fontSize: isTitleSlide ? 18 : 16,
-          color: t.exportTextColor.replace("#", ""),
-          bullet: isTitleSlide ? false : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
-          paraSpaceBefore: 8,
-          paraSpaceAfter: 4,
-          align: isTitleSlide ? ("center" as const) : ("left" as const),
-        },
-      }));
+      const bulletText = slide.content.map((b) => {
+        const isExample = b.startsWith("Example:");
+        const isParagraph = b.length > 120 && !isExample;
+        return {
+          text: b,
+          options: {
+            fontSize: isTitleSlide ? 18 : (isParagraph ? 14 : 15),
+            color: isExample ? "B8860B" : t.exportTextColor.replace("#", ""),
+            italic: isExample,
+            bullet: isTitleSlide || isParagraph ? false : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
+            paraSpaceBefore: isParagraph || isExample ? 10 : 6,
+            paraSpaceAfter: 4,
+            align: isTitleSlide ? ("center" as const) : ("left" as const),
+          },
+        };
+      });
 
       pptSlide.addText(bulletText as any, {
         x: isTitleSlide ? 2 : 1.2,
-        y: isTitleSlide ? 3.4 : 2.0,
+        y: isTitleSlide ? 3.4 : 1.8,
         w: hasImage ? 6.5 : (isTitleSlide ? 9.33 : 11.13),
-        h: isTitleSlide ? 2.5 : 4.5,
+        h: isTitleSlide ? 2.5 : 5.0,
         fontFace: t.fontFamily,
         valign: "top",
       });

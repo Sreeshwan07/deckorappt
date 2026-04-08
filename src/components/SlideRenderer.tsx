@@ -57,15 +57,28 @@ export default function SlideRenderer({
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-2", isTitleSlide ? "mt-2" : "mt-3")}>
-                {slide.content.map((bullet, i) => (
-                  <li key={i} className={cn("flex items-start gap-3", textClr, isTitleSlide ? "text-[1em] justify-center" : "text-[0.9em]")}>
-                    {!isTitleSlide && (
-                      <span className={cn("mt-[0.45em] w-[0.4em] h-[0.4em] rounded-full shrink-0", t.bulletColor)} />
-                    )}
-                    <span>{bullet}</span>
-                  </li>
-                ))}
+              <ul className={cn("space-y-1.5", isTitleSlide ? "mt-2" : "mt-2")}>
+                {slide.content.map((bullet, i) => {
+                  const isExample = bullet.startsWith("Example:");
+                  const isParagraph = bullet.length > 120 && !isExample;
+                  return (
+                    <li key={i} className={cn(
+                      "flex items-start gap-2",
+                      textClr,
+                      isTitleSlide ? "text-[1em] justify-center" : "text-[0.75em] leading-snug",
+                      isExample && "mt-1 italic opacity-90",
+                      isParagraph && "mt-1"
+                    )}>
+                      {!isTitleSlide && !isParagraph && (
+                        <span className={cn(
+                          "mt-[0.45em] w-[0.35em] h-[0.35em] rounded-full shrink-0",
+                          isExample ? "bg-amber-400" : t.bulletColor
+                        )} />
+                      )}
+                      <span>{bullet}</span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
