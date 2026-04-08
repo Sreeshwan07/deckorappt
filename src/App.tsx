@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreatePresentation from "./pages/CreatePresentation";
@@ -21,12 +22,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePresentation /></ProtectedRoute>} />
             <Route path="/editor/:id" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
-            {/* Old /preview/:id routes will 404 - use /editor/:id */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
