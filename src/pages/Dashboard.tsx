@@ -3,12 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Presentation, Trash2, Pencil, Clock, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Plus,
+  Presentation,
+  Trash2,
+  Pencil,
+  Clock,
+  Sparkles,
+  LayoutDashboard,
+  Palette,
+  Settings,
+  LogOut,
+  Search,
+  LayoutGrid,
+  List,
+  Copy,
+  MoreVertical,
+  Menu,
+  X,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { templates } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
+import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PresentationRow {
   id: string;
@@ -18,15 +43,26 @@ interface PresentationRow {
   status: string;
   is_paid: boolean;
   created_at: string;
+  updated_at: string;
   num_slides: number;
 }
 
+const sidebarItems = [
+  { label: "All Presentations", icon: LayoutDashboard, id: "all" },
+  { label: "Templates", icon: Palette, id: "templates" },
+  { label: "Settings", icon: Settings, id: "settings" },
+];
+
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [presentations, setPresentations] = useState<PresentationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [activeTab, setActiveTab] = useState("all");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -56,87 +92,292 @@ export default function Dashboard() {
     }
   };
 
+  const duplicatePresentation = async (pres: PresentationRow) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("presentations")
+      .insert({
+        user_id: user.id,
+        title: `${pres.title} (Copy)`,
+        topic: pres.topic,
+        num_slides: pres.num_slides,
+        template: pres.template,
+        tone: "professional",
+        status: "ready",
+      })
+      .select()
+      .single();
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else if (data) {
+      setPresentations((p) => [data as PresentationRow, ...p]);
+      toast({ title: "Presentation duplicated" });
+    }
+  };
+
+  const filtered = presentations.filter(
+    (p) =>
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.topic.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <AppLayout>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold font-display text-foreground">My Presentations</h2>
-            <p className="text-muted-foreground mt-1">Create and manage your AI-generated slides</p>
+    <div className="min-h-screen flex cosmic-bg">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar/90 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:translate-x-0 border-r border-sidebar-border",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+          <div className="p-1.5 rounded-lg gradient-primary">
+            <Presentation className="h-5 w-5 text-primary-foreground" />
           </div>
-          <Button variant="gradient" className="glow-purple-sm" onClick={() => navigate("/create")}>
-            <Sparkles className="h-4 w-4" />
+          <span className="text-lg font-bold font-display gradient-text">SlideAI</span>
+          <button className="ml-auto lg:hidden text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="px-3 py-4">
+          <Button variant="gradient" className="w-full glow-purple-sm" onClick={() => navigate("/create")}>
+            <Plus className="h-4 w-4" />
             New Presentation
           </Button>
         </div>
 
-        {loading ? (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 rounded-2xl bg-muted/50 animate-pulse" />
-            ))}
+        <nav className="flex-1 px-3 space-y-1">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                activeTab === item.id
+                  ? "bg-primary/15 text-primary glow-purple-sm"
+                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="px-3 py-4 border-t border-sidebar-border">
+          <div className="px-4 py-2 text-xs text-sidebar-foreground/40 truncate mb-2">{user?.email}</div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 bg-background/60 backdrop-blur-xl border-b border-border h-14 flex items-center px-4 lg:px-8 gap-4">
+          <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <Menu className="h-5 w-5 text-foreground" />
+          </button>
+          <div className="flex-1 max-w-md relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search presentations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-9 bg-secondary/30 border-border"
+            />
           </div>
-        ) : presentations.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-24">
-            <div className="p-4 rounded-2xl gradient-primary-subtle inline-block mb-6">
-              <Presentation className="h-12 w-12 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold font-display text-foreground mb-2">No presentations yet</h3>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Create your first AI-powered presentation in seconds</p>
-            <Button variant="gradient" className="glow-purple-sm" onClick={() => navigate("/create")}>
-              <Sparkles className="h-4 w-4" />
-              Create Presentation
+          <div className="flex items-center gap-1 ml-auto">
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("grid")}
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-          </motion.div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {presentations.map((pres, idx) => (
-              <motion.div
-                key={pres.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="group glass-card rounded-2xl overflow-hidden hover:glow-purple-sm transition-all cursor-pointer"
-                onClick={() => navigate(`/editor/${pres.id}`)}
-              >
-                <div className="slide-preview w-full overflow-hidden">
-                  <SlideRenderer
-                    slide={{ title: pres.title, content: [pres.topic] }}
-                    templateId={pres.template}
-                    slideIndex={0}
-                    totalSlides={pres.num_slides}
-                    className="w-full h-full text-[4px]"
-                  />
-                </div>
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </header>
 
-                <div className="p-4">
-                  <h3 className="font-semibold text-foreground truncate mb-1">{pres.title}</h3>
-                  <p className="text-sm text-muted-foreground truncate mb-3">{pres.topic}</p>
+        <main className="flex-1 p-4 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold font-display text-foreground">
+                  {activeTab === "all" ? "All Presentations" : activeTab === "templates" ? "Templates" : "Settings"}
+                </h2>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  {activeTab === "all" && `${filtered.length} presentation${filtered.length !== 1 ? "s" : ""}`}
+                </p>
+              </div>
+              <Button variant="gradient" className="glow-purple-sm hidden sm:flex" onClick={() => navigate("/create")}>
+                <Sparkles className="h-4 w-4" />
+                New Presentation
+              </Button>
+            </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                      {templates[pres.template]?.name || pres.template}
-                    </span>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {new Date(pres.created_at).toLocaleDateString()}
+            {activeTab === "templates" ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.values(templates).map((t) => (
+                  <div
+                    key={t.id}
+                    className="glass-card rounded-xl overflow-hidden hover:glow-purple-sm transition-all cursor-pointer"
+                    onClick={() => navigate("/create")}
+                  >
+                    <div className="slide-preview w-full overflow-hidden">
+                      <SlideRenderer slide={{ title: t.name, content: [t.description] }} templateId={t.id} slideIndex={0} totalSlides={1} className="w-full h-full text-[3.5px]" />
+                    </div>
+                    <div className="p-3">
+                      <h4 className="text-sm font-semibold text-foreground">{t.name}</h4>
+                      <p className="text-xs text-muted-foreground">{t.description}</p>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="outline" size="sm" className="flex-1 bg-secondary/30" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${pres.id}`); }}>
-                      <Pencil className="h-3 w-3" /> Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); deletePresentation(pres.id); }}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
-                  </div>
+                ))}
+              </div>
+            ) : activeTab === "settings" ? (
+              <div className="glass-card rounded-2xl p-6 max-w-md">
+                <h3 className="font-semibold text-foreground mb-4">Account</h3>
+                <p className="text-sm text-muted-foreground mb-2">Email: {user?.email}</p>
+                <Button variant="outline" onClick={signOut}>Sign Out</Button>
+              </div>
+            ) : loading ? (
+              <div className={cn("gap-5", viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3" : "flex flex-col")}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={cn("rounded-2xl bg-muted/50 animate-pulse", viewMode === "grid" ? "h-64" : "h-20")} />
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-24">
+                <div className="p-4 rounded-2xl gradient-primary-subtle inline-block mb-6">
+                  <Presentation className="h-12 w-12 text-primary" />
                 </div>
+                <h3 className="text-xl font-semibold font-display text-foreground mb-2">
+                  {search ? "No results found" : "No presentations yet"}
+                </h3>
+                <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+                  {search ? "Try a different search term" : "Create your first AI-powered presentation in seconds"}
+                </p>
+                {!search && (
+                  <Button variant="gradient" className="glow-purple-sm" onClick={() => navigate("/create")}>
+                    <Sparkles className="h-4 w-4" />
+                    Create Presentation
+                  </Button>
+                )}
               </motion.div>
-            ))}
+            ) : viewMode === "grid" ? (
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {filtered.map((pres, idx) => (
+                  <motion.div
+                    key={pres.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className="group glass-card rounded-2xl overflow-hidden hover:glow-purple-sm transition-all cursor-pointer"
+                    onClick={() => navigate(`/editor/${pres.id}`)}
+                  >
+                    <div className="slide-preview w-full overflow-hidden relative">
+                      <SlideRenderer slide={{ title: pres.title, content: [pres.topic] }} templateId={pres.template} slideIndex={0} totalSlides={pres.num_slides} className="w-full h-full text-[4px]" />
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 backdrop-blur-sm">
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => navigate(`/editor/${pres.id}`)}>
+                              <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => duplicatePresentation(pres)}>
+                              <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => deletePresentation(pres.id)}>
+                              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-foreground truncate mb-1">{pres.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate mb-3">{pres.topic}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                          {templates[pres.template]?.name || pres.template}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {new Date(pres.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {filtered.map((pres, idx) => (
+                  <motion.div
+                    key={pres.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    className="group glass-card rounded-xl p-4 flex items-center gap-4 hover:glow-purple-sm transition-all cursor-pointer"
+                    onClick={() => navigate(`/editor/${pres.id}`)}
+                  >
+                    <div className="w-24 shrink-0 slide-preview rounded-lg overflow-hidden">
+                      <SlideRenderer slide={{ title: pres.title, content: [] }} templateId={pres.template} slideIndex={0} totalSlides={1} className="w-full h-full text-[2px]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{pres.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{pres.topic}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground hidden sm:block">
+                      {new Date(pres.created_at).toLocaleDateString()}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => navigate(`/editor/${pres.id}`)}>
+                          <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => duplicatePresentation(pres)}>
+                          <Copy className="h-3.5 w-3.5 mr-2" /> Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => deletePresentation(pres.id)}>
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </main>
       </div>
-    </AppLayout>
+    </div>
   );
 }
