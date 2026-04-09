@@ -31,10 +31,12 @@ export default function SlideRenderer({
 }: SlideRendererProps) {
   const t = templates[templateId] || templates.business;
   const isTitleSlide = isTitle || slideIndex === 0;
-  const bg = isTitleSlide ? t.slideAccentBg : t.slideBg;
-  const titleClr = isTitleSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,100%)]" : t.titleColor;
-  const textClr = isTitleSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,90%)]" : t.textColor;
-  const hasImage = !!slide.image_url && !isTitleSlide;
+  const isThankYou = slide.title.toLowerCase().includes("thank you");
+  const isCenteredSlide = isTitleSlide || isThankYou;
+  const bg = isCenteredSlide ? t.slideAccentBg : t.slideBg;
+  const titleClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,100%)]" : t.titleColor;
+  const textClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,90%)]" : t.textColor;
+  const hasImage = !!slide.image_url && !isCenteredSlide;
 
   return (
     <div
@@ -42,40 +44,45 @@ export default function SlideRenderer({
       className={cn("relative overflow-hidden select-none", className)}
     >
       <div className={cn("w-full h-full flex flex-col justify-center rounded-xl", bg)}>
-        {!isTitleSlide && (
+        {!isCenteredSlide && (
           <div className={cn("absolute top-0 left-0 right-0 h-1", t.accentLine)} />
         )}
 
         <div className={cn(
           "flex-1 flex",
           hasImage ? "flex-row" : "flex-col justify-center",
-          isTitleSlide ? "p-[8%] text-center items-center flex-col" : "p-[6%]"
+          isCenteredSlide ? "p-[8%] text-center items-center flex-col" : "p-[6%]"
         )}>
           <div className={cn(hasImage ? "flex-1 flex flex-col justify-center pr-[4%]" : "w-full")}>
-            <h2 className={cn("font-bold leading-tight mb-4", titleClr, isTitleSlide ? "text-[2.2em]" : "text-[1.6em]")}>
+            <h2 className={cn(
+              "font-bold leading-tight mb-4",
+              titleClr,
+              isCenteredSlide ? "text-[2.4em]" : "text-[1.7em]"
+            )}>
               {slide.title}
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-1.5", isTitleSlide ? "mt-2" : "mt-2")}>
+              <ul className={cn("space-y-2", isCenteredSlide ? "mt-3" : "mt-3")}>
                 {slide.content.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
                   const isParagraph = bullet.length > 120 && !isExample;
+                  const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
                       "flex items-start gap-2",
                       textClr,
-                      isTitleSlide ? "text-[1em] justify-center" : "text-[0.75em] leading-snug",
-                      isExample && "mt-1 italic opacity-90",
-                      isParagraph && "mt-1"
+                      isCenteredSlide ? "text-[1.05em] justify-center leading-relaxed" : "text-[0.78em] leading-relaxed",
+                      isExample && "mt-2 italic opacity-90",
+                      isParagraph && "mt-2"
                     )}>
-                      {!isTitleSlide && !isParagraph && (
+                      {!isCenteredSlide && !isParagraph && (
                         <span className={cn(
-                          "mt-[0.45em] w-[0.35em] h-[0.35em] rounded-full shrink-0",
+                          "mt-[0.5em] w-[0.38em] h-[0.38em] rounded-full shrink-0",
                           isExample ? "bg-amber-400" : t.bulletColor
                         )} />
                       )}
-                      <span>{bullet}</span>
+                      <span className={cn(isKeyword && "font-medium")}>{bullet}</span>
                     </li>
                   );
                 })}

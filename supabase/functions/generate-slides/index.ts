@@ -45,7 +45,9 @@ SLIDE STRUCTURE:
 - Slide 2: Introduction/Overview — define the topic and outline what will be covered
 - Slides 3 to ${slideCount - 2}: Core content slides, each covering a specific sub-topic with definition → explanation → key points → example
 - Slide ${slideCount - 1}: Key Takeaways / Summary — consolidate the main learnings
-- Slide ${slideCount}: Thank You / Q&A slide
+- Slide ${slideCount}: Thank You slide — title must be "Thank You", with content: ["Thank you for your time and attention.", "Questions are welcome."]
+
+IMPORTANT: The LAST slide MUST always be a "Thank You" slide with exactly that title.
 
 Each content item in the bullets array can be:
 - A paragraph (2-3 sentences for explanations)
