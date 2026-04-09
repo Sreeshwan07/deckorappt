@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SlideRenderer from "@/components/SlideRenderer";
+import SlideshowMode from "@/components/SlideshowMode";
 import { templates } from "@/lib/templates";
 import { exportToPptx } from "@/lib/export";
 import { isAdminUser } from "@/lib/admin";
 import {
   ArrowLeft, Plus, Trash2, Download, Loader2, Pencil, Check, X,
-  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw,
+  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw, Play,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ export default function SlideEditor() {
   const [exporting, setExporting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [generatingImage, setGeneratingImage] = useState<string | null>(null);
+  const [slideshowActive, setSlideshowActive] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = isAdminUser(user?.email);
@@ -247,6 +249,10 @@ export default function SlideEditor() {
             <Plus className="h-4 w-4" /> Slide
           </Button>
 
+          <Button variant="outline" size="sm" onClick={() => setSlideshowActive(true)} className="bg-secondary/30">
+            <Play className="h-4 w-4" /> Present
+          </Button>
+
           <Button variant="gradient" size="sm" onClick={handleExport} disabled={exporting} className="glow-purple-sm">
             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {isAdmin ? "Export Free" : "Export PPTX"}
@@ -431,6 +437,16 @@ export default function SlideEditor() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {slideshowActive && (
+        <SlideshowMode
+          slides={slides}
+          templateId={presentation?.template || "business"}
+          currentSlide={currentSlide}
+          onSlideChange={setCurrentSlide}
+          onExit={() => setSlideshowActive(false)}
+        />
       )}
     </div>
   );
