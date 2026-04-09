@@ -39,7 +39,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <div className="p-1.5 rounded-lg gradient-primary">
             <Presentation className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold font-display gradient-text">SlideAI</span>
+          <span className="text-lg font-bold font-display gradient-text">Deckora</span>
           <button className="ml-auto lg:hidden text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5" />
           </button>
@@ -85,7 +85,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <Menu className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-lg font-semibold font-display text-foreground truncate">
-            {navItems.find((i) => i.path === location.pathname)?.label || "SlideAI"}
+            {navItems.find((i) => i.path === location.pathname)?.label || "Deckora"}
           </h1>
         </header>
         <main className="flex-1 p-4 lg:p-8">{children}</main>
