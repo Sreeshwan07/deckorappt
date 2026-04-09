@@ -23,30 +23,32 @@ export async function exportToPptx(
     const slide = slides[idx];
     const pptSlide = pptx.addSlide();
     const isTitleSlide = idx === 0;
-    const hasImage = !!slide.image_url && !isTitleSlide;
+    const isThankYou = slide.title.toLowerCase().includes("thank you");
+    const isCenteredSlide = isTitleSlide || isThankYou;
+    const hasImage = !!slide.image_url && !isCenteredSlide;
 
     pptSlide.background = { color: t.exportBg.replace("#", "") };
 
-    if (!isTitleSlide) {
+    if (!isCenteredSlide) {
       pptSlide.addShape(pptxgenjs.ShapeType.rect, {
         x: 0, y: 0, w: "100%", h: 0.06,
         fill: { color: t.exportAccentColor.replace("#", "") },
       });
     }
 
-    const textWidth = hasImage ? 7.5 : (isTitleSlide ? 11.33 : 11.73);
+    const textWidth = hasImage ? 7.5 : (isCenteredSlide ? 11.33 : 11.73);
 
     // Title
     pptSlide.addText(slide.title, {
-      x: isTitleSlide ? 1 : 0.8,
-      y: isTitleSlide ? 2.0 : 0.6,
+      x: isCenteredSlide ? 1 : 0.8,
+      y: isCenteredSlide ? 2.0 : 0.6,
       w: textWidth,
       h: 1.2,
-      fontSize: isTitleSlide ? 36 : 28,
+      fontSize: isCenteredSlide ? 36 : 28,
       fontFace: t.fontFamily,
       color: t.exportTitleColor.replace("#", ""),
       bold: true,
-      align: isTitleSlide ? "center" : "left",
+      align: isCenteredSlide ? "center" : "left",
       valign: "middle",
     });
 
@@ -58,22 +60,22 @@ export async function exportToPptx(
         return {
           text: b,
           options: {
-            fontSize: isTitleSlide ? 18 : (isParagraph ? 14 : 15),
+            fontSize: isCenteredSlide ? 18 : (isParagraph ? 14 : 15),
             color: isExample ? "B8860B" : t.exportTextColor.replace("#", ""),
             italic: isExample,
-            bullet: isTitleSlide || isParagraph ? false : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
+            bullet: isCenteredSlide || isParagraph ? false : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
             paraSpaceBefore: isParagraph || isExample ? 10 : 6,
             paraSpaceAfter: 4,
-            align: isTitleSlide ? ("center" as const) : ("left" as const),
+            align: isCenteredSlide ? ("center" as const) : ("left" as const),
           },
         };
       });
 
       pptSlide.addText(bulletText as any, {
-        x: isTitleSlide ? 2 : 1.2,
-        y: isTitleSlide ? 3.4 : 1.8,
-        w: hasImage ? 6.5 : (isTitleSlide ? 9.33 : 11.13),
-        h: isTitleSlide ? 2.5 : 5.0,
+        x: isCenteredSlide ? 2 : 1.2,
+        y: isCenteredSlide ? 3.4 : 1.8,
+        w: hasImage ? 6.5 : (isCenteredSlide ? 9.33 : 11.13),
+        h: isCenteredSlide ? 2.5 : 5.0,
         fontFace: t.fontFamily,
         valign: "top",
       });
