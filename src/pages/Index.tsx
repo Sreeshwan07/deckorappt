@@ -31,9 +31,6 @@ export default function Index() {
     }
   };
 
-  const handleTopicClick = (t: string) => {
-    setTopic(t);
-  };
 
   return (
     <div className="min-h-screen cosmic-bg">
