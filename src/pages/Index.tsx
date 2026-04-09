@@ -35,7 +35,7 @@ export default function Index() {
 
   const handleGenerate = () => {
     if (user) {
-      navigate("/create", { state: { topic } });
+      navigate(`/create?topic=${encodeURIComponent(topic)}`);
     } else {
       setAuthOpen(true);
     }
@@ -54,7 +54,7 @@ export default function Index() {
             <div className="p-1.5 rounded-lg gradient-primary">
               <Presentation className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold font-display gradient-text">SlideAI</span>
+            <span className="text-lg font-bold font-display gradient-text">Deckora</span>
           </div>
           <div className="flex items-center gap-3">
             {user ? (
@@ -213,7 +213,7 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} SlideAI · AI-Powered Presentations</p>
+        <p>© {new Date().getFullYear()} Deckora · AI-Powered Presentations</p>
       </footer>
 
       <AuthModal open={authOpen} onOpenChange={setAuthOpen} reason="Sign in to generate and save presentations" />

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,11 +24,17 @@ export default function CreatePresentation() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
   const [numSlides, setNumSlides] = useState(7);
   const [tone, setTone] = useState("professional");
   const [template, setTemplate] = useState("business");
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    const prefill = searchParams.get("topic");
+    if (prefill) setTopic(prefill);
+  }, [searchParams]);
 
   const handleGenerate = async () => {
     if (!topic.trim() || !user) return;
@@ -54,7 +60,6 @@ export default function CreatePresentation() {
         const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
         if (slidesError) throw slidesError;
 
-        // Fire off image generation for non-title slides (don't await - let it happen in background)
         if (insertedSlides) {
           insertedSlides.slice(1).forEach((dbSlide: any, idx: number) => {
             const aiSlide = slides[idx + 1];
