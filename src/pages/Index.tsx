@@ -16,16 +16,6 @@ import {
   Download,
 } from "lucide-react";
 
-const suggestedTopics = [
-  "Artificial Intelligence",
-  "Machine Learning",
-  "DBMS Concepts",
-  "Cloud Computing",
-  "Cyber Security",
-  "Data Structures",
-  "Operating Systems",
-  "Web Development",
-];
 
 export default function Index() {
   const { user } = useAuth();
@@ -41,9 +31,6 @@ export default function Index() {
     }
   };
 
-  const handleTopicClick = (t: string) => {
-    setTopic(t);
-  };
 
   return (
     <div className="min-h-screen cosmic-bg">
@@ -75,54 +62,37 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/5 blur-[100px]" />
-        <div className="max-w-4xl mx-auto px-4 pt-16 pb-12 text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm mb-6">
-              <Sparkles className="h-3.5 w-3.5" />
-              AI-Powered Presentations
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold font-display gradient-text mb-4 leading-tight">
+        <div className="max-w-3xl mx-auto px-4 pt-24 pb-20 text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-8">
+            <h1 className="text-4xl md:text-6xl font-bold font-display gradient-text leading-tight">
               Create stunning presentations in seconds
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               Enter any topic and let AI generate professional, academic-quality slides with structured content, examples, and visuals.
             </p>
 
-            {/* Topic input */}
-            <div className="max-w-xl mx-auto">
-              <div className="flex gap-2">
+            <div className="max-w-xl mx-auto pt-4">
+              <div className="flex gap-3">
                 <Input
                   placeholder="Enter your presentation topic..."
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="h-12 text-base bg-secondary/30 border-border"
+                  className="h-14 text-base bg-secondary/20 border-primary/20 focus:border-primary/50 focus:ring-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.08)]"
                   onKeyDown={(e) => e.key === "Enter" && topic.trim() && handleGenerate()}
                 />
                 <Button
                   variant="gradient"
                   size="lg"
-                  className="glow-purple-sm shrink-0"
+                  className="h-14 px-8 glow-purple shrink-0 text-base transition-transform hover:scale-[1.03] active:scale-[0.98]"
                   onClick={handleGenerate}
                   disabled={!topic.trim()}
                 >
                   <Sparkles className="h-4 w-4" />
                   Generate
                 </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4 justify-center">
-                {suggestedTopics.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => handleTopicClick(t)}
-                    className="px-3 py-1.5 text-xs rounded-full border border-border bg-secondary/20 text-muted-foreground hover:border-primary/30 hover:text-foreground transition-colors"
-                  >
-                    {t}
-                  </button>
-                ))}
               </div>
             </div>
           </motion.div>
