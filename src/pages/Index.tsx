@@ -279,10 +279,7 @@ export default function Index() {
       <footer className="border-t border-border/40 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded gradient-primary">
-              <Presentation className="h-3 w-3 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground font-display">Deckora</span>
+            <img src="/logo.png" alt="Deckora" className="h-5 w-auto" />
           </div>
           <p>© 2026 Deckora. All rights reserved.</p>
           <div className="flex items-center gap-6">
