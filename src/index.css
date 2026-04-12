@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,45 +6,45 @@
 
 @layer base {
   :root {
-    /* Cosmic Purple Dark Theme */
-    --background: 260 25% 6%;
-    --foreground: 260 10% 95%;
+    /* Orange Premium Theme */
+    --background: 20 14% 4%;
+    --foreground: 40 10% 95%;
 
-    --card: 260 25% 10%;
-    --card-foreground: 260 10% 95%;
+    --card: 20 15% 9%;
+    --card-foreground: 40 10% 95%;
 
-    --popover: 260 25% 10%;
-    --popover-foreground: 260 10% 95%;
+    --popover: 20 15% 9%;
+    --popover-foreground: 40 10% 95%;
 
-    --primary: 265 85% 65%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 20% 15%;
-    --secondary-foreground: 260 10% 90%;
+    --secondary: 20 12% 14%;
+    --secondary-foreground: 40 10% 90%;
 
-    --muted: 260 15% 14%;
-    --muted-foreground: 260 10% 55%;
+    --muted: 20 10% 13%;
+    --muted-foreground: 30 8% 50%;
 
-    --accent: 280 75% 60%;
+    --accent: 38 92% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 15% 18%;
-    --input: 260 15% 16%;
-    --ring: 265 85% 65%;
+    --border: 20 10% 16%;
+    --input: 20 10% 14%;
+    --ring: 25 95% 53%;
 
     --radius: 0.875rem;
 
-    --sidebar-background: 260 30% 5%;
-    --sidebar-foreground: 260 10% 75%;
-    --sidebar-primary: 265 85% 70%;
+    --sidebar-background: 20 15% 4%;
+    --sidebar-foreground: 30 8% 70%;
+    --sidebar-primary: 25 95% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 25% 12%;
-    --sidebar-accent-foreground: 260 10% 92%;
-    --sidebar-border: 260 15% 14%;
-    --sidebar-ring: 265 85% 65%;
+    --sidebar-accent: 20 15% 11%;
+    --sidebar-accent-foreground: 40 10% 92%;
+    --sidebar-border: 20 10% 13%;
+    --sidebar-ring: 25 95% 53%;
 
     --success: 152 60% 45%;
     --success-foreground: 0 0% 100%;
@@ -65,45 +65,45 @@
 
 @layer utilities {
   .glass-card {
-    background: hsla(260, 25%, 12%, 0.6);
+    background: hsla(20, 15%, 10%, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsla(260, 15%, 22%, 0.5);
+    border: 1px solid hsla(25, 20%, 25%, 0.3);
   }
   .glass-card-strong {
-    background: hsla(260, 25%, 12%, 0.85);
+    background: hsla(20, 15%, 10%, 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsla(260, 15%, 25%, 0.4);
+    border: 1px solid hsla(25, 20%, 28%, 0.4);
   }
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(265 85% 65%), hsl(280 75% 55%), hsl(240 70% 55%));
+    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(33 90% 50%), hsl(38 92% 50%));
   }
   .gradient-primary-subtle {
-    background: linear-gradient(135deg, hsla(265, 85%, 65%, 0.15), hsla(280, 75%, 55%, 0.08));
+    background: linear-gradient(135deg, hsla(25, 95%, 53%, 0.15), hsla(38, 92%, 50%, 0.08));
   }
   .gradient-text {
-    background: linear-gradient(135deg, hsl(265 85% 72%), hsl(280 75% 62%), hsl(240 70% 62%));
+    background: linear-gradient(135deg, hsl(25 95% 60%), hsl(38 92% 55%), hsl(45 93% 58%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .glow-purple {
-    box-shadow: 0 0 40px -10px hsla(265, 85%, 65%, 0.4), 0 0 80px -20px hsla(280, 75%, 55%, 0.2);
+  .gradient-orange-bg {
+    background: radial-gradient(ellipse at 30% 20%, hsla(25, 90%, 45%, 0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, hsla(38, 85%, 40%, 0.15) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 100%, hsla(20, 50%, 10%, 0.3) 0%, transparent 60%),
+                hsl(20, 14%, 4%);
   }
-  .glow-purple-sm {
-    box-shadow: 0 0 20px -5px hsla(265, 85%, 65%, 0.3);
+  .glow-orange {
+    box-shadow: 0 0 60px -15px hsla(25, 95%, 53%, 0.35), 0 0 100px -30px hsla(38, 92%, 50%, 0.15);
+  }
+  .glow-orange-sm {
+    box-shadow: 0 0 25px -5px hsla(25, 95%, 53%, 0.25);
   }
   .slide-preview {
     aspect-ratio: 16/9;
   }
-  .cosmic-bg {
-    background: radial-gradient(ellipse at 20% 50%, hsla(265, 60%, 20%, 0.3) 0%, transparent 70%),
-                radial-gradient(ellipse at 80% 20%, hsla(280, 60%, 15%, 0.25) 0%, transparent 60%),
-                radial-gradient(ellipse at 50% 100%, hsla(240, 50%, 12%, 0.2) 0%, transparent 60%),
-                hsl(260, 25%, 6%);
-  }
   .font-display {
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
   }
 }
