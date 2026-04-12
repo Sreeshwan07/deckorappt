@@ -46,10 +46,7 @@ export default function Index() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/40 border-b border-border/50">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg gradient-primary">
-              <Presentation className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold font-display tracking-wide">Deckora</span>
+            <img src="/logo.png" alt="Deckora" className="h-8 w-auto" />
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
