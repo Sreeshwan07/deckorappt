@@ -15,16 +15,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const navLinks = ["Features", "Templates", "Pricing"];
-
 const features = [
   { icon: Zap, title: "AI-Powered", desc: "Generate complete presentations from a single topic" },
   { icon: Layout, title: "Pro Templates", desc: "Beautiful, academic-grade slide designs" },
   { icon: Download, title: "PPTX Export", desc: "Download production-ready PowerPoint files" },
   { icon: Play, title: "Present Mode", desc: "Fullscreen slideshow with keyboard controls" },
 ];
-
-const trustedBy = ["IIT Delhi", "Stanford", "MIT", "Harvard", "Oxford"];
 
 export default function Index() {
   const { user } = useAuth();
@@ -52,14 +48,6 @@ export default function Index() {
             <span className="text-xl font-bold font-display tracking-wide">Deckora</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                {link}
-              </a>
-            ))}
-          </nav>
-
           <div className="flex items-center gap-3">
             {user ? (
               <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -77,135 +65,54 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section — centered, focused */}
       <section className="relative overflow-hidden">
-        {/* Glow orbs */}
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-40 right-1/4 w-80 h-80 bg-accent/8 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-20 left-1/3 w-[500px] h-[500px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/6 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 pt-20 pb-24">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left - Content */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-8"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
-                <Sparkles className="h-3.5 w-3.5" />
-                AI-Powered Presentation Maker
-              </div>
+        <div className="max-w-4xl mx-auto px-6 pt-28 pb-32 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-8"
+          >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-display leading-[1.1] tracking-tight">
+              Create stunning{" "}
+              <span className="gradient-text">presentations</span>{" "}
+              in seconds
+            </h1>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-display leading-[1.1] tracking-tight">
-                Create stunning{" "}
-                <span className="gradient-text">presentations</span>{" "}
-                in seconds
-              </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Transform any topic into professional, academic-grade slides with AI.
+              Export to PowerPoint, present fullscreen — all in one tool.
+            </p>
 
-              <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-                Transform any topic into professional, academic-grade slides with AI.
-                Export to PowerPoint, present fullscreen — all in one tool.
-              </p>
-
-              {/* Input + Button */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-lg">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                    placeholder="Enter your topic..."
-                    className="w-full h-13 px-5 rounded-full bg-secondary/60 border border-border/60 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
-                  />
-                </div>
+            {/* Large centered input bar */}
+            <div className="max-w-2xl mx-auto mt-10">
+              <div className="relative flex items-center bg-secondary/50 border border-border/60 rounded-2xl shadow-xl shadow-primary/5 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 focus-within:shadow-[0_0_30px_hsl(var(--primary)/0.1)] transition-all">
+                <Sparkles className="absolute left-5 h-5 w-5 text-muted-foreground/50" />
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                  placeholder="Describe your presentation topic…"
+                  className="flex-1 h-16 pl-13 pr-4 bg-transparent text-foreground placeholder:text-muted-foreground/60 outline-none text-base"
+                />
                 <Button
                   onClick={handleGenerate}
-                  className="gradient-primary text-primary-foreground rounded-full px-7 h-13 text-sm font-semibold hover:scale-[1.03] hover:brightness-110 transition-all shadow-lg glow-orange-sm"
+                  className="gradient-primary text-primary-foreground rounded-xl px-6 h-11 mr-2.5 text-sm font-semibold hover:scale-[1.02] hover:brightness-110 transition-all shadow-md"
                 >
                   Generate
-                  <ArrowRight className="h-4 w-4 ml-1" />
+                  <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
               </div>
-
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-3">
                 No credit card required • Free to try
               </p>
-            </motion.div>
-
-            {/* Right - Floating Card Mockup */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="hidden lg:block relative"
-            >
-              <div className="relative">
-                {/* Main card */}
-                <div className="glass-card-strong rounded-2xl p-6 glow-orange">
-                  <div className="slide-preview rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-secondary flex items-center justify-center">
-                    <div className="text-center space-y-4 p-8">
-                      <div className="w-14 h-14 rounded-2xl gradient-primary mx-auto flex items-center justify-center">
-                        <Presentation className="h-7 w-7 text-primary-foreground" />
-                      </div>
-                      <h3 className="text-xl font-bold font-display">Your Presentation</h3>
-                      <p className="text-sm text-muted-foreground">AI-generated slides ready in seconds</p>
-                      <div className="flex gap-2 justify-center">
-                        {[1, 2, 3, 4].map((i) => (
-                          <div key={i} className={`h-1.5 rounded-full ${i === 1 ? "w-8 bg-primary" : "w-4 bg-muted"}`} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating mini card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  className="absolute -bottom-6 -left-8 glass-card rounded-xl px-4 py-3 flex items-center gap-3"
-                >
-                  <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-                    <Download className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold">Export Ready</p>
-                    <p className="text-[10px] text-muted-foreground">PPTX • PDF</p>
-                  </div>
-                </motion.div>
-
-                {/* Floating mini card 2 */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7, duration: 0.5 }}
-                  className="absolute -top-4 -right-6 glass-card rounded-xl px-4 py-3 flex items-center gap-3"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-success/20 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-success" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold">12 Slides</p>
-                    <p className="text-[10px] text-muted-foreground">Generated</p>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Section */}
-      <section className="border-t border-border/40 py-10">
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-center text-xs text-muted-foreground uppercase tracking-widest mb-6">Trusted by students & professionals</p>
-          <div className="flex items-center justify-center gap-10 flex-wrap">
-            {trustedBy.map((name) => (
-              <span key={name} className="text-sm font-medium text-muted-foreground/50">{name}</span>
-            ))}
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
