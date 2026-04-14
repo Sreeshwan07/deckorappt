@@ -24,44 +24,50 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert academic presentation creator specializing in B.Tech and university-level content. Generate exactly ${slideCount} slides for a ${tone || "professional"} presentation about the given topic using a ${template || "business"} style.
+    const systemPrompt = `You are an expert presentation creator for academic and professional audiences. Generate exactly ${slideCount} slides for a ${tone || "professional"} presentation about the given topic.
 
-CRITICAL CONTENT RULES — follow these strictly:
+CONCEPT-AWARE RULES — analyze the topic type and adapt:
 
-1. DEFINITIONS: Every concept slide MUST start with a clear, proper definition (1-2 sentences). Use professional academic language.
+FOR TECHNICAL TOPICS (CS, Engineering, Science):
+- Start each concept with "Definition: [formal definition]"
+- Follow with a 2-3 sentence explanation paragraph
+- Include "Formula: [formula]" when relevant, with variable explanations
+- Add "Example: [concrete real-world example]"
 
-2. STRUCTURED EXPLANATIONS: After the definition, provide a detailed explanation paragraph (2-3 sentences). Do NOT use only bullet points — mix paragraphs with bullets.
+FOR THEORETICAL/CONCEPTUAL TOPICS:
+- Provide structured explanation with cause-effect relationships
+- Include historical context or evolution of the concept
+- Add comparison points where applicable
 
-3. KEY POINTS: Use bullet points only for listing distinct items, features, or steps. Each bullet should be substantive (15-30 words), not vague one-liners.
+FOR FORMULA-HEAVY TOPICS:
+- Present each formula clearly with "Formula: [expression]"
+- Explain each variable on the next bullet
+- Include a worked "Example: [step-by-step solution]"
 
-4. EXAMPLES: For technical/academic topics, ALWAYS include at least one real-world or practical example. Prefix it with "Example:" so it stands out.
+SLIDE STRUCTURE (exactly ${slideCount} slides):
+- Slide 1: Title slide — presentation title + descriptive subtitle
+- Slide 2: Introduction — define the topic, outline coverage
+- Slides 3-${slideCount - 2}: Core content — each covering ONE sub-topic deeply:
+  * "Definition: ..." (1-2 sentences)
+  * Explanation paragraph (2-3 sentences)
+  * 2-3 key bullet points (15-30 words each, substantive)
+  * "Example: ..." (practical/real-world)
+  * "Formula: ..." (if applicable)
+- Slide ${slideCount - 1}: Key Takeaways — consolidate main learnings
+- Slide ${slideCount}: "Thank You" — title MUST be "Thank You", content: ["Thank you for your time and attention.", "Questions are welcome."]
 
-5. FORMULAS & TERMINOLOGY: For technical topics, include relevant formulas, equations, or proper technical terminology where appropriate.
+CONTENT RULES:
+- Each slide: 4-6 content items max (no overcrowding)
+- Mix paragraphs + bullets + examples (never bullet-only)
+- Every definition must be academically precise
+- No vague one-liners, no repetition across slides
+- Use proper technical terminology
 
-6. CONTENT DEPTH: Each slide should have 4-7 content items combining paragraphs, bullets, and examples. Avoid shallow or repetitive content.
-
-SLIDE STRUCTURE:
-- Slide 1: Title slide with presentation title and a descriptive subtitle
-- Slide 2: Introduction/Overview — define the topic and outline what will be covered
-- Slides 3 to ${slideCount - 2}: Core content slides, each covering a specific sub-topic with definition → explanation → key points → example
-- Slide ${slideCount - 1}: Key Takeaways / Summary — consolidate the main learnings
-- Slide ${slideCount}: Thank You slide — title must be "Thank You", with content: ["Thank you for your time and attention.", "Questions are welcome."]
-
-IMPORTANT: The LAST slide MUST always be a "Thank You" slide with exactly that title.
-
-Each content item in the bullets array can be:
-- A paragraph (2-3 sentences for explanations)
-- A bullet point (for listing features/steps)
-- An example prefixed with "Example:"
-- A formula or technical note
-
-Return a JSON object with a "slides" array. Each slide must have:
-- "title": clear, specific, academic-quality title
-- "bullets": array of 4-7 content items (mix of paragraphs, points, and examples as described above)
-- "notes": speaker notes with additional context (2-3 sentences)
-- "image_prompt": a specific visual description for AI image generation relevant to the slide content (e.g. "detailed diagram showing CPU architecture with labeled components", "infographic comparing different sorting algorithms")
-
-Return ONLY valid JSON, no markdown.`;
+Return ONLY valid JSON with a "slides" array. Each slide object has:
+- "title": clear, specific title
+- "bullets": array of 4-6 content strings
+- "notes": speaker notes (2-3 sentences)
+- "image_prompt": specific visual description for the slide`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -70,17 +76,17 @@ Return ONLY valid JSON, no markdown.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a detailed academic presentation about: ${topic}` },
+          { role: "user", content: `Create a detailed presentation about: ${topic}` },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "generate_slides",
-              description: "Generate structured academic presentation slides with detailed content",
+              description: "Generate structured presentation slides",
               parameters: {
                 type: "object",
                 properties: {
@@ -89,14 +95,10 @@ Return ONLY valid JSON, no markdown.`;
                     items: {
                       type: "object",
                       properties: {
-                        title: { type: "string", description: "Clear, specific slide title" },
-                        bullets: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "4-7 content items: mix of explanation paragraphs, bullet points, and examples",
-                        },
-                        notes: { type: "string", description: "Speaker notes with additional context" },
-                        image_prompt: { type: "string", description: "Specific visual description for AI image generation" },
+                        title: { type: "string" },
+                        bullets: { type: "array", items: { type: "string" } },
+                        notes: { type: "string" },
+                        image_prompt: { type: "string" },
                       },
                       required: ["title", "bullets", "image_prompt"],
                     },

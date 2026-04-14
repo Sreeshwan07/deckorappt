@@ -57,32 +57,39 @@ export default function SlideRenderer({
             <h2 className={cn(
               "font-bold leading-tight mb-4",
               titleClr,
-              isCenteredSlide ? "text-[2.4em]" : "text-[1.7em]"
+              isCenteredSlide ? "text-[2.6em]" : "text-[1.85em]"
             )}>
               {slide.title}
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-2", isCenteredSlide ? "mt-3" : "mt-3")}>
+              <ul className={cn("space-y-2", isCenteredSlide ? "mt-4" : "mt-3")}>
                 {slide.content.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
-                  const isParagraph = bullet.length > 120 && !isExample;
+                  const isFormula = bullet.startsWith("Formula:") || bullet.startsWith("Equation:");
+                  const isDefinition = bullet.startsWith("Definition:");
+                  const isParagraph = bullet.length > 120 && !isExample && !isFormula;
                   const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
                       "flex items-start gap-2",
                       textClr,
-                      isCenteredSlide ? "text-[1.05em] justify-center leading-relaxed" : "text-[0.78em] leading-relaxed",
+                      isCenteredSlide ? "text-[1.1em] justify-center leading-relaxed" : "text-[0.82em] leading-relaxed",
                       isExample && "mt-2 italic opacity-90",
+                      isFormula && "mt-2 font-mono text-center justify-center text-[0.9em]",
+                      isDefinition && "mt-1 font-medium",
                       isParagraph && "mt-2"
                     )}>
-                      {!isCenteredSlide && !isParagraph && (
+                      {!isCenteredSlide && !isParagraph && !isFormula && (
                         <span className={cn(
                           "mt-[0.5em] w-[0.38em] h-[0.38em] rounded-full shrink-0",
-                          isExample ? "bg-amber-400" : t.bulletColor
+                          isExample ? "bg-amber-400" : isDefinition ? "bg-emerald-400" : t.bulletColor
                         )} />
                       )}
-                      <span className={cn(isKeyword && "font-medium")}>{bullet}</span>
+                      <span className={cn(
+                        isKeyword && "font-medium",
+                        isFormula && "px-[8%] py-1 rounded bg-black/5 w-full text-center"
+                      )}>{bullet}</span>
                     </li>
                   );
                 })}
