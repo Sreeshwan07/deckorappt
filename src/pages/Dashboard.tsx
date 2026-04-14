@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,7 +69,7 @@ export default function Dashboard() {
     loadPresentations();
   }, [user]);
 
-  const loadPresentations = async () => {
+  const loadPresentations = useCallback(async () => {
     const { data, error } = await supabase
       .from("presentations")
       .select("*")
@@ -80,9 +80,9 @@ export default function Dashboard() {
       setPresentations(data || []);
     }
     setLoading(false);
-  };
+  }, [toast]);
 
-  const deletePresentation = async (id: string) => {
+  const deletePresentation = useCallback(async (id: string) => {
     const { error } = await supabase.from("presentations").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -90,9 +90,9 @@ export default function Dashboard() {
       setPresentations((p) => p.filter((item) => item.id !== id));
       toast({ title: "Presentation deleted" });
     }
-  };
+  }, [toast]);
 
-  const duplicatePresentation = async (pres: PresentationRow) => {
+  const duplicatePresentation = useCallback(async (pres: PresentationRow) => {
     if (!user) return;
     const { data, error } = await supabase
       .from("presentations")
@@ -113,16 +113,33 @@ export default function Dashboard() {
       setPresentations((p) => [data as PresentationRow, ...p]);
       toast({ title: "Presentation duplicated" });
     }
-  };
+  }, [user, toast]);
 
-  const filtered = presentations.filter(
-    (p) =>
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.topic.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(
+    () => presentations.filter(
+      (p) =>
+        p.title.toLowerCase().includes(search.toLowerCase()) ||
+        p.topic.toLowerCase().includes(search.toLowerCase())
+    ),
+    [presentations, search]
   );
 
+  const formatDate = useCallback((dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD < 7) return `${diffD}d ago`;
+    return d.toLocaleDateString();
+  }, []);
+
   return (
-    <div className="min-h-screen flex cosmic-bg">
+    <div className="min-h-screen flex bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -130,21 +147,21 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar/90 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:translate-x-0 border-r border-sidebar-border",
+        "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-card/95 backdrop-blur-xl flex flex-col transition-transform duration-300 lg:translate-x-0 border-r border-border",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
           <div className="p-1.5 rounded-lg gradient-primary">
             <Presentation className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-lg font-bold font-display gradient-text">Deckora</span>
-          <button className="ml-auto lg:hidden text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>
+          <button className="ml-auto lg:hidden text-foreground" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="px-3 py-4">
-          <Button variant="gradient" className="w-full glow-purple-sm" onClick={() => navigate("/create")}>
+          <Button className="w-full gradient-primary text-primary-foreground rounded-xl h-10 font-semibold hover:brightness-110 transition-all" onClick={() => navigate("/create")}>
             <Plus className="h-4 w-4" />
             New Presentation
           </Button>
@@ -158,8 +175,8 @@ export default function Dashboard() {
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                 activeTab === item.id
-                  ? "bg-primary/15 text-primary glow-purple-sm"
-                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -168,11 +185,11 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        <div className="px-3 py-4 border-t border-sidebar-border">
-          <div className="px-4 py-2 text-xs text-sidebar-foreground/40 truncate mb-2">{user?.email}</div>
+        <div className="px-3 py-4 border-t border-border">
+          <div className="px-4 py-2 text-xs text-muted-foreground truncate mb-2">{user?.email}</div>
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
             onClick={signOut}
           >
             <LogOut className="h-4 w-4" />
@@ -184,7 +201,7 @@ export default function Dashboard() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background/60 backdrop-blur-xl border-b border-border h-14 flex items-center px-4 lg:px-8 gap-4">
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border h-14 flex items-center px-4 lg:px-8 gap-4">
           <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-foreground" />
           </button>
@@ -194,7 +211,7 @@ export default function Dashboard() {
               placeholder="Search presentations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-9 bg-secondary/30 border-border"
+              className="pl-10 h-9 bg-secondary/30 border-border rounded-lg"
             />
           </div>
           <div className="flex items-center gap-1 ml-auto">
@@ -228,7 +245,7 @@ export default function Dashboard() {
                   {activeTab === "all" && `${filtered.length} presentation${filtered.length !== 1 ? "s" : ""}`}
                 </p>
               </div>
-              <Button variant="gradient" className="glow-purple-sm hidden sm:flex" onClick={() => navigate("/create")}>
+              <Button className="gradient-primary text-primary-foreground rounded-xl hidden sm:flex hover:brightness-110 transition-all" onClick={() => navigate("/create")}>
                 <Sparkles className="h-4 w-4" />
                 New Presentation
               </Button>
@@ -239,7 +256,7 @@ export default function Dashboard() {
                 {Object.values(templates).map((t) => (
                   <div
                     key={t.id}
-                    className="glass-card rounded-xl overflow-hidden hover:glow-purple-sm transition-all cursor-pointer"
+                    className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all cursor-pointer"
                     onClick={() => navigate("/create")}
                   >
                     <div className="slide-preview w-full overflow-hidden">
@@ -253,7 +270,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : activeTab === "settings" ? (
-              <div className="glass-card rounded-2xl p-6 max-w-md">
+              <div className="rounded-2xl border border-border bg-card p-6 max-w-md">
                 <h3 className="font-semibold text-foreground mb-4">Account</h3>
                 <p className="text-sm text-muted-foreground mb-2">Email: {user?.email}</p>
                 <Button variant="outline" onClick={signOut}>Sign Out</Button>
@@ -261,12 +278,12 @@ export default function Dashboard() {
             ) : loading ? (
               <div className={cn("gap-5", viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3" : "flex flex-col")}>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className={cn("rounded-2xl bg-muted/50 animate-pulse", viewMode === "grid" ? "h-64" : "h-20")} />
+                  <div key={i} className={cn("rounded-2xl bg-muted/30 animate-pulse", viewMode === "grid" ? "h-64" : "h-20")} />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-24">
-                <div className="p-4 rounded-2xl gradient-primary-subtle inline-block mb-6">
+                <div className="p-4 rounded-2xl bg-primary/10 inline-block mb-6">
                   <Presentation className="h-12 w-12 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold font-display text-foreground mb-2">
@@ -276,7 +293,7 @@ export default function Dashboard() {
                   {search ? "Try a different search term" : "Create your first AI-powered presentation in seconds"}
                 </p>
                 {!search && (
-                  <Button variant="gradient" className="glow-purple-sm" onClick={() => navigate("/create")}>
+                  <Button className="gradient-primary text-primary-foreground rounded-xl hover:brightness-110 transition-all" onClick={() => navigate("/create")}>
                     <Sparkles className="h-4 w-4" />
                     Create Presentation
                   </Button>
@@ -287,10 +304,10 @@ export default function Dashboard() {
                 {filtered.map((pres, idx) => (
                   <motion.div
                     key={pres.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className="group glass-card rounded-2xl overflow-hidden hover:glow-purple-sm transition-all cursor-pointer"
+                    transition={{ delay: Math.min(idx * 0.03, 0.3) }}
+                    className="group rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer"
                     onClick={() => navigate(`/editor/${pres.id}`)}
                   >
                     <div className="slide-preview w-full overflow-hidden relative">
@@ -325,7 +342,7 @@ export default function Dashboard() {
                         </span>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {new Date(pres.created_at).toLocaleDateString()}
+                          {formatDate(pres.created_at)}
                         </div>
                       </div>
                     </div>
@@ -339,8 +356,8 @@ export default function Dashboard() {
                     key={pres.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    className="group glass-card rounded-xl p-4 flex items-center gap-4 hover:glow-purple-sm transition-all cursor-pointer"
+                    transition={{ delay: Math.min(idx * 0.02, 0.2) }}
+                    className="group rounded-xl border border-border bg-card p-4 flex items-center gap-4 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer"
                     onClick={() => navigate(`/editor/${pres.id}`)}
                   >
                     <div className="w-24 shrink-0 slide-preview rounded-lg overflow-hidden">
@@ -351,7 +368,7 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground truncate">{pres.topic}</p>
                     </div>
                     <span className="text-xs text-muted-foreground hidden sm:block">
-                      {new Date(pres.created_at).toLocaleDateString()}
+                      {formatDate(pres.created_at)}
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
