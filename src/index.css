@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,50 +6,51 @@
 
 @layer base {
   :root {
-    /* Orange Premium Theme */
-    --background: 20 14% 4%;
-    --foreground: 40 10% 95%;
+    /* Cyberpunk Cinematic Base — neutrals stay constant; accents come from ThemeProvider */
+    --background: 230 25% 5%;
+    --foreground: 220 15% 95%;
 
-    --card: 20 15% 9%;
-    --card-foreground: 40 10% 95%;
+    --card: 230 22% 8%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 20 15% 9%;
-    --popover-foreground: 40 10% 95%;
+    --popover: 230 22% 8%;
+    --popover-foreground: 220 15% 95%;
 
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    /* Set by ThemeProvider — defaults to Aurora Pulse */
+    --primary: 265 92% 65%;
+    --primary-foreground: 230 25% 5%;
+    --accent: 220 100% 65%;
+    --accent-foreground: 230 25% 5%;
+    --theme-glow: 260 100% 70%;
 
-    --secondary: 20 12% 14%;
-    --secondary-foreground: 40 10% 90%;
+    --secondary: 230 18% 12%;
+    --secondary-foreground: 220 15% 92%;
 
-    --muted: 20 10% 13%;
-    --muted-foreground: 30 8% 50%;
+    --muted: 230 15% 11%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 55%;
+    --destructive: 0 75% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 10% 16%;
-    --input: 20 10% 14%;
-    --ring: 25 95% 53%;
+    --border: 230 18% 16%;
+    --input: 230 18% 12%;
+    --ring: 265 92% 65%;
 
     --radius: 0.875rem;
 
-    --sidebar-background: 20 15% 4%;
-    --sidebar-foreground: 30 8% 70%;
-    --sidebar-primary: 25 95% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 20 15% 11%;
-    --sidebar-accent-foreground: 40 10% 92%;
-    --sidebar-border: 20 10% 13%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-background: 230 28% 4%;
+    --sidebar-foreground: 220 12% 70%;
+    --sidebar-primary: 265 92% 65%;
+    --sidebar-primary-foreground: 230 25% 5%;
+    --sidebar-accent: 230 22% 10%;
+    --sidebar-accent-foreground: 220 15% 92%;
+    --sidebar-border: 230 18% 13%;
+    --sidebar-ring: 265 92% 65%;
 
-    --success: 152 60% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --success: 152 70% 50%;
+    --success-foreground: 230 25% 5%;
+    --warning: 38 95% 55%;
+    --warning-foreground: 230 25% 5%;
   }
 }
 
@@ -57,53 +58,155 @@
   * {
     @apply border-border;
   }
-
+  html {
+    color-scheme: dark;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  /* Smooth theme transitions */
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 }
 
 @layer utilities {
+  /* === Glass surfaces === */
   .glass-card {
-    background: hsla(20, 15%, 10%, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsla(25, 20%, 25%, 0.3);
+    background: linear-gradient(145deg, hsla(230, 25%, 10%, 0.65), hsla(230, 30%, 6%, 0.55));
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid hsla(0, 0%, 100%, 0.06);
   }
   .glass-card-strong {
-    background: hsla(20, 15%, 10%, 0.85);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsla(25, 20%, 28%, 0.4);
+    background: linear-gradient(145deg, hsla(230, 25%, 11%, 0.85), hsla(230, 30%, 7%, 0.78));
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid hsla(0, 0%, 100%, 0.08);
   }
+  .neon-border {
+    border: 1px solid hsl(var(--primary) / 0.4);
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.1),
+      0 0 24px -4px hsl(var(--theme-glow) / 0.35),
+      inset 0 1px 0 hsl(var(--primary) / 0.15);
+  }
+  .neon-border-soft {
+    border: 1px solid hsl(var(--primary) / 0.2);
+    box-shadow:
+      0 0 32px -10px hsl(var(--theme-glow) / 0.25);
+  }
+
+  /* === Gradients === */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(33 90% 50%), hsl(38 92% 50%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
   .gradient-primary-subtle {
-    background: linear-gradient(135deg, hsla(25, 95%, 53%, 0.15), hsla(38, 92%, 50%, 0.08));
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--accent) / 0.1));
   }
   .gradient-text {
-    background: linear-gradient(135deg, hsl(25 95% 60%), hsl(38 92% 55%), hsl(45 93% 58%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .gradient-orange-bg {
-    background: radial-gradient(ellipse at 30% 20%, hsla(25, 90%, 45%, 0.2) 0%, transparent 60%),
-                radial-gradient(ellipse at 70% 60%, hsla(38, 85%, 40%, 0.15) 0%, transparent 55%),
-                radial-gradient(ellipse at 50% 100%, hsla(20, 50%, 10%, 0.3) 0%, transparent 60%),
-                hsl(20, 14%, 4%);
+
+  /* === Cinematic backgrounds === */
+  .cinematic-bg {
+    background:
+      radial-gradient(ellipse at 15% 0%, hsl(var(--primary) / 0.18) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 30%, hsl(var(--accent) / 0.14) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, hsl(var(--theme-glow) / 0.10) 0%, transparent 60%),
+      hsl(var(--background));
   }
-  .glow-orange {
-    box-shadow: 0 0 60px -15px hsla(25, 95%, 53%, 0.35), 0 0 100px -30px hsla(38, 92%, 50%, 0.15);
+  .grid-bg {
+    background-image:
+      linear-gradient(hsla(0, 0%, 100%, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(0, 0%, 100%, 0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
   }
-  .glow-orange-sm {
-    box-shadow: 0 0 25px -5px hsla(25, 95%, 53%, 0.25);
+  .scanline::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3px,
+      hsla(0, 0%, 100%, 0.012) 3px,
+      hsla(0, 0%, 100%, 0.012) 4px
+    );
+    pointer-events: none;
   }
+
+  /* === Glows === */
+  .glow-primary {
+    box-shadow: 0 0 60px -10px hsl(var(--theme-glow) / 0.5), 0 0 120px -30px hsl(var(--accent) / 0.3);
+  }
+  .glow-primary-sm {
+    box-shadow: 0 0 24px -6px hsl(var(--theme-glow) / 0.45);
+  }
+  .text-glow {
+    text-shadow: 0 0 18px hsl(var(--theme-glow) / 0.45);
+  }
+
+  /* === Slide preview === */
   .slide-preview {
     aspect-ratio: 16/9;
   }
+
+  /* === Typography === */
   .font-display {
-    font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+    font-family: 'Space Grotesk', 'Inter Tight', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .font-mono-cy {
+    font-family: 'Space Grotesk', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* === Animated border (lightweight, GPU-friendly) === */
+  .animated-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .animated-border::before {
+    content: "";
+    position: absolute; inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--ab-angle, 0deg), hsl(var(--primary) / 0.6), hsl(var(--accent) / 0.6), hsl(var(--primary) / 0.6));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0.6;
+    pointer-events: none;
+    animation: ab-spin 6s linear infinite;
+  }
+  @property --ab-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes ab-spin {
+    to { --ab-angle: 360deg; }
+  }
+
+  .pulse-dot {
+    position: relative;
+  }
+  .pulse-dot::before {
+    content: "";
+    position: absolute; inset: -4px;
+    border-radius: 9999px;
+    background: hsl(var(--primary) / 0.4);
+    animation: ping-soft 2s ease-out infinite;
+  }
+  @keyframes ping-soft {
+    0% { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(1.6); opacity: 0; }
   }
 }
