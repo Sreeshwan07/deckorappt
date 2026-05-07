@@ -55,9 +55,9 @@ export default function SlideRenderer({
         )}>
           <div className={cn(hasImage ? "flex-1 flex flex-col justify-center pr-[4%]" : "w-full")}>
             <h2 className={cn(
-              "font-bold leading-tight mb-4",
+              "font-bold leading-[1.15] mb-6 tracking-tight",
               titleClr,
-              isCenteredSlide ? "text-[2.6em]" : "text-[1.85em]"
+              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
             )}>
               {slide.title}
             </h2>
