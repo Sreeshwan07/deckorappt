@@ -72,11 +72,11 @@ export default function SlideRenderer({
                   const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
-                      "flex items-start gap-2",
+                      "flex items-start gap-3",
                       textClr,
-                      isCenteredSlide ? "text-[1.1em] justify-center leading-relaxed" : "text-[0.82em] leading-relaxed",
+                      isCenteredSlide ? "text-[1.35em] justify-center leading-relaxed" : "text-[1.15em] leading-[1.55]",
                       isExample && "mt-2 italic opacity-90",
-                      isFormula && "mt-2 font-mono text-center justify-center text-[0.9em]",
+                      isFormula && "mt-3 font-mono text-center justify-center text-[1.2em]",
                       isDefinition && "mt-1 font-medium",
                       isParagraph && "mt-2"
                     )}>
