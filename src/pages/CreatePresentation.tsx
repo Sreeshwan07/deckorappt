@@ -54,8 +54,12 @@ export default function CreatePresentation() {
 
       const slides = aiData?.slides || [];
       if (slides.length > 0) {
-        const slideRows = slides.map((s: { title: string; bullets: string[]; notes?: string; image_prompt?: string }, i: number) => ({
-          presentation_id: pres.id, slide_order: i, title: s.title, content: JSON.stringify(s.bullets || []), speaker_notes: s.notes || null,
+        const slideRows = slides.map((s: any, i: number) => ({
+          presentation_id: pres.id,
+          slide_order: i,
+          title: s.title,
+          content: JSON.stringify(Array.isArray(s.content) && s.content.length > 0 ? s.content : (s.bullets || [])),
+          speaker_notes: s.notes || null,
         }));
         const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
         if (slidesError) throw slidesError;
