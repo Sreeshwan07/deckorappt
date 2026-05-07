@@ -63,7 +63,7 @@ export default function SlideRenderer({
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-2", isCenteredSlide ? "mt-4" : "mt-3")}>
+              <ul className={cn("space-y-4", isCenteredSlide ? "mt-6" : "mt-4")}>
                 {slide.content.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
                   const isFormula = bullet.startsWith("Formula:") || bullet.startsWith("Equation:");
