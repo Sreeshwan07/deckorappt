@@ -28,7 +28,7 @@ export default function CreatePresentation() {
   const [topic, setTopic] = useState("");
   const [numSlides, setNumSlides] = useState(7);
   const [tone, setTone] = useState("professional");
-  const [template, setTemplate] = useState("business");
+  const [template, setTemplate] = useState("academicmodern");
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
