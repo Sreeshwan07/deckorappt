@@ -55,15 +55,15 @@ export default function SlideRenderer({
         )}>
           <div className={cn(hasImage ? "flex-1 flex flex-col justify-center pr-[4%]" : "w-full")}>
             <h2 className={cn(
-              "font-bold leading-tight mb-4",
+              "font-bold leading-[1.15] mb-6 tracking-tight",
               titleClr,
-              isCenteredSlide ? "text-[2.6em]" : "text-[1.85em]"
+              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
             )}>
               {slide.title}
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-2", isCenteredSlide ? "mt-4" : "mt-3")}>
+              <ul className={cn("space-y-4", isCenteredSlide ? "mt-6" : "mt-4")}>
                 {slide.content.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
                   const isFormula = bullet.startsWith("Formula:") || bullet.startsWith("Equation:");
@@ -72,11 +72,11 @@ export default function SlideRenderer({
                   const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
-                      "flex items-start gap-2",
+                      "flex items-start gap-3",
                       textClr,
-                      isCenteredSlide ? "text-[1.1em] justify-center leading-relaxed" : "text-[0.82em] leading-relaxed",
+                      isCenteredSlide ? "text-[1.35em] justify-center leading-relaxed" : "text-[1.15em] leading-[1.55]",
                       isExample && "mt-2 italic opacity-90",
-                      isFormula && "mt-2 font-mono text-center justify-center text-[0.9em]",
+                      isFormula && "mt-3 font-mono text-center justify-center text-[1.2em]",
                       isDefinition && "mt-1 font-medium",
                       isParagraph && "mt-2"
                     )}>
