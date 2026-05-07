@@ -16,6 +16,22 @@ export interface TemplateConfig {
 }
 
 export const templates: Record<string, TemplateConfig> = {
+  academicmodern: {
+    id: "academicmodern",
+    name: "Academic Modern",
+    description: "Editorial serif headings, clean light layout — seminar ready",
+    slideBg: "bg-gradient-to-br from-[hsl(40,30%,98%)] to-[hsl(35,25%,95%)]",
+    slideAccentBg: "bg-gradient-to-br from-[hsl(25,40%,18%)] to-[hsl(20,35%,12%)]",
+    titleColor: "text-[hsl(25,30%,15%)] font-serif",
+    textColor: "text-[hsl(25,15%,32%)]",
+    bulletColor: "bg-[hsl(25,55%,45%)]",
+    accentLine: "bg-[hsl(25,55%,45%)]",
+    exportBg: "#FAF7F2",
+    exportTitleColor: "#2A1F18",
+    exportTextColor: "#3F362E",
+    exportAccentColor: "#A0653A",
+    fontFamily: "Georgia",
+  },
   business: {
     id: "business",
     name: "Corporate Professional",
