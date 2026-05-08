@@ -117,3 +117,6 @@ function SlideRendererBase({
     </div>
   );
 }
+
+const SlideRenderer = memo(SlideRendererBase);
+export default SlideRenderer;
