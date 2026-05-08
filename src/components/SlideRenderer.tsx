@@ -21,7 +21,7 @@ interface SlideRendererProps {
   className?: string;
 }
 
-export default function SlideRenderer({
+function SlideRendererBase({
   slide,
   templateId,
   slideIndex,
