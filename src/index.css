@@ -163,6 +163,10 @@
     font-family: 'Space Grotesk', 'Inter Tight', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
+  .font-editorial {
+    font-family: 'Playfair Display', 'Libre Baskerville', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
   .font-mono-cy {
     font-family: 'Space Grotesk', monospace;
     letter-spacing: 0.05em;
