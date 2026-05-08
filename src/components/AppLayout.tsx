@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import BrandLogo from "@/components/BrandLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
