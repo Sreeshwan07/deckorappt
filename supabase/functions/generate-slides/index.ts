@@ -68,12 +68,13 @@ STRUCTURE (exactly ${slideCount} slides)
 ==============================
 CONTENT QUALITY RULES
 ==============================
-- Academic, precise, B.Tech standard. No filler, no repetition.
-- Bullets must be SUBSTANTIVE (15-30 words each), never one-liners.
-- Use formal definitions and proper terminology.
-- For technical topics: include at least ONE "formula" slide if any equation applies.
-- For evaluative topics: include a "pros_cons" slide.
-- For "X vs Y" or alternatives: include a "comparison" slide.
+- Academic, precise, B.Tech standard. No filler, no repetition, no shallow one-liners.
+- Bullets must be SUBSTANTIVE (18-32 words each), explain the concept, not just name it.
+- Use formal definitions and proper terminology. Prefer concrete examples over vague statements.
+- For technical topics: include at least ONE "formula" slide whenever any equation, complexity, or quantitative relation applies.
+- For evaluative topics or any topic with trade-offs: include a "pros_cons" slide.
+- For "X vs Y", variants, or alternatives: include a "comparison" slide.
+- Cover the FULL standard syllabus of the detected subject — do not skip core sub-topics.
 - Every "intro" and "content" slide should have an image_prompt for a relevant supporting visual.
 
 ==============================
