@@ -225,10 +225,7 @@ export default function Index() {
       <footer className="border-t border-border/40 py-8 relative">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded gradient-primary">
-              <Presentation className="h-3 w-3 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground font-display">Deckora</span>
+            <BrandLogo className="text-base" />
           </div>
           <p className="font-mono-cy uppercase tracking-widest text-[10px]">© 2026 · AI Creative OS</p>
           <div className="flex items-center gap-6">
