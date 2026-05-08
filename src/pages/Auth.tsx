@@ -70,12 +70,7 @@ export default function Auth() {
           transition={{ duration: 0.7 }}
           className="relative max-w-md text-center z-10"
         >
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="p-3 rounded-2xl gradient-primary glow-purple">
-              <Presentation className="h-10 w-10 text-primary-foreground" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold font-display gradient-text mb-4">SlideAI</h1>
+          <BrandLogo className="text-6xl mb-4 block" />
           <p className="text-lg text-muted-foreground leading-relaxed">
             Create stunning presentations in seconds with AI. Professional slides, zero effort.
           </p>
