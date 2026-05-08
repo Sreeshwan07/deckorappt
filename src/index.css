@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=Sora:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -170,6 +170,38 @@
   .font-mono-cy {
     font-family: 'Space Grotesk', monospace;
     letter-spacing: 0.05em;
+  }
+
+  /* === Deckora wordmark === */
+  .brand-deckora {
+    font-family: 'Sora', 'Inter Tight', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    background: linear-gradient(95deg,
+      hsl(220 55% 28%) 0%,
+      hsl(215 45% 38%) 35%,
+      hsl(190 55% 48%) 70%,
+      hsl(175 45% 45%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: 0 1px 0 hsla(0, 0%, 100%, 0.02);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+    line-height: 1;
+    display: inline-block;
+  }
+  /* Lighter variant on dark cinematic surfaces */
+  [data-theme] .brand-deckora {
+    background: linear-gradient(95deg,
+      hsl(220 30% 92%) 0%,
+      hsl(195 70% 78%) 45%,
+      hsl(175 55% 68%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
   }
 
   /* === Animated border (lightweight, GPU-friendly) === */

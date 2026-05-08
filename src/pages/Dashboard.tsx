@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -177,11 +178,8 @@ export default function Dashboard() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border">
-          <div className="p-1.5 rounded-lg gradient-primary glow-primary-sm">
-            <Presentation className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold font-display tracking-tight text-foreground">Deckora</span>
-          <span className="text-[9px] font-mono-cy uppercase text-primary/80 ml-auto px-1.5 py-0.5 rounded border border-primary/30 bg-primary/5">
+          <BrandLogo className="text-xl" />
+          <span className="text-[9px] font-mono-cy uppercase text-muted-foreground ml-auto px-1.5 py-0.5 rounded border border-border/60">
             v2
           </span>
           <button className="lg:hidden text-sidebar-foreground" onClick={() => setSidebarOpen(false)}>

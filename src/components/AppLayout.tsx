@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import BrandLogo from "@/components/BrandLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -53,7 +54,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border">
-          <span className="text-xl font-semibold font-display tracking-tight text-foreground">Deckora</span>
+          <BrandLogo className="text-2xl" />
           <span className="text-[9px] font-mono-cy uppercase text-muted-foreground ml-auto px-1.5 py-0.5 rounded border border-border/60">
             v2
           </span>

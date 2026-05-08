@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Presentation, Mail, Lock, Loader2, Sparkles } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
@@ -70,12 +71,7 @@ export default function Auth() {
           transition={{ duration: 0.7 }}
           className="relative max-w-md text-center z-10"
         >
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="p-3 rounded-2xl gradient-primary glow-purple">
-              <Presentation className="h-10 w-10 text-primary-foreground" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold font-display gradient-text mb-4">SlideAI</h1>
+          <BrandLogo className="text-6xl mb-4 block" />
           <p className="text-lg text-muted-foreground leading-relaxed">
             Create stunning presentations in seconds with AI. Professional slides, zero effort.
           </p>
@@ -95,11 +91,8 @@ export default function Auth() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-sm"
         >
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="p-2 rounded-xl gradient-primary">
-              <Presentation className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold font-display gradient-text">SlideAI</span>
+          <div className="lg:hidden mb-8 text-center">
+            <BrandLogo className="text-3xl" />
           </div>
 
           <h2 className="text-2xl font-bold font-display text-foreground mb-1">

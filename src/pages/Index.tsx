@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
@@ -52,14 +53,9 @@ export default function Index() {
       <header className="sticky top-0 z-50 backdrop-blur-2xl bg-background/40 border-b border-border/40">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg gradient-primary glow-primary-sm">
-              <Presentation className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold font-display tracking-tight">Deckora</span>
-            <span className="ml-2 text-[9px] font-mono-cy uppercase tracking-widest text-primary px-1.5 py-0.5 rounded border border-primary/30 bg-primary/5">
-              AI · OS
-            </span>
+            <BrandLogo className="text-2xl" />
           </div>
+
 
           <div className="hidden md:flex items-center gap-7 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
@@ -229,10 +225,7 @@ export default function Index() {
       <footer className="border-t border-border/40 py-8 relative">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded gradient-primary">
-              <Presentation className="h-3 w-3 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground font-display">Deckora</span>
+            <BrandLogo className="text-base" />
           </div>
           <p className="font-mono-cy uppercase tracking-widest text-[10px]">© 2026 · AI Creative OS</p>
           <div className="flex items-center gap-6">
