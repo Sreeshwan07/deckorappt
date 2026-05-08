@@ -53,9 +53,8 @@ export default function Index() {
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
           <div className="flex items-center gap-2.5">
             <BrandLogo className="text-2xl" />
-
-            </span>
           </div>
+
 
           <div className="hidden md:flex items-center gap-7 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
