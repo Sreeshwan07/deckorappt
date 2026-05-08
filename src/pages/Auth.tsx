@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Presentation, Mail, Lock, Loader2, Sparkles } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
