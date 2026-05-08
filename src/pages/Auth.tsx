@@ -90,11 +90,8 @@ export default function Auth() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-sm"
         >
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="p-2 rounded-xl gradient-primary">
-              <Presentation className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold font-display gradient-text">SlideAI</span>
+          <div className="lg:hidden mb-8 text-center">
+            <BrandLogo className="text-3xl" />
           </div>
 
           <h2 className="text-2xl font-bold font-display text-foreground mb-1">
