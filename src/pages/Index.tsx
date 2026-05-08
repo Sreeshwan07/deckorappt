@@ -52,12 +52,8 @@ export default function Index() {
       <header className="sticky top-0 z-50 backdrop-blur-2xl bg-background/40 border-b border-border/40">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg gradient-primary glow-primary-sm">
-              <Presentation className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold font-display tracking-tight">Deckora</span>
-            <span className="ml-2 text-[9px] font-mono-cy uppercase tracking-widest text-primary px-1.5 py-0.5 rounded border border-primary/30 bg-primary/5">
-              AI · OS
+            <BrandLogo className="text-2xl" />
+
             </span>
           </div>
 
