@@ -53,7 +53,7 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
           transition={{ duration: 0.3 }}
           className="w-full h-full flex items-center justify-center"
         >
-          <div className="w-full h-full max-w-[100vw] max-h-[100vh] aspect-video" style={{ fontSize: "clamp(20px, 1.9vw, 34px)" }}>
+          <div className="w-full h-full max-w-[100vw] max-h-[100vh] aspect-video" style={{ fontSize: "clamp(24px, 2.4vw, 44px)" }}>
             <SlideRenderer
               slide={slides[currentSlide]}
               templateId={templateId}
