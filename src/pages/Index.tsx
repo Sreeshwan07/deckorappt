@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles,
