@@ -29,15 +29,27 @@ serve(async (req) => {
 Generate exactly ${slideCount} slides about the given topic in a ${tone || "professional academic"} tone.
 
 ==============================
-SUBJECT-AWARE SYLLABUS COVERAGE
+EDUCATION-LEVEL & SUBJECT DETECTION
 ==============================
-First, silently detect the SUBJECT TYPE of the topic and tailor coverage:
-- DBMS / OS / COA / Networks / Compilers → definitions, architecture diagrams (described), working, types, advantages, disadvantages, real example.
+Silently detect both the EDUCATION LEVEL and the SUBJECT TYPE of the topic, then adapt language and depth:
+
+Education levels:
+- Class 1–5 (Primary)        → very simple words, short sentences, lots of relatable examples, no jargon.
+- Class 6–10 (Middle/High)   → clear definitions, simple diagrams (described), school-textbook tone.
+- Class 11–12 / Intermediate → exam-oriented, key points, formulas, NCERT-style structure.
+- Diploma / B.Tech / Degree  → formal academic, precise terminology, derivations, complexity, examples.
+- MBA / Corporate            → frameworks, case studies, business impact, KPIs.
+- Competitive exams / GK     → fact-dense, definitions, dates, summary tables.
+
+Subject-aware coverage:
+- DBMS / OS / COA / Networks / Compilers → definitions, architecture (described), working, types, advantages, disadvantages, real example.
 - Data Structures / Algorithms → definition, operations, time/space complexity, pseudocode/steps, example, applications.
 - Machine Learning / AI → problem definition, intuition, math/formula, algorithm steps, pros/cons, use-cases.
-- Engineering / Physics / Math → formal definition, derivation/formula with variables, units, worked example, applications.
-- Business / Management → concept, frameworks, examples, case study, advantages/limitations.
-- General theory → concept, key principles, examples, comparisons, conclusion.
+- Mathematics / Physics / Chemistry → formal definition, derivation/formula with variables and units, worked numerical, applications.
+- Biology → definition, structure (described), function, classification, diagram-style explanation, examples.
+- History / Geography / Civics → background, key events/concepts, timeline, causes/effects, significance.
+- Economics / Accounting / Business Studies → concept, formula/principle, example, advantages/limitations, real-world case.
+- General theory / GK → concept, key principles, examples, comparisons, conclusion.
 
 The slide deck MUST cover the topic's standard syllabus completely and in logical academic order
 (introduction → fundamentals → working/structure → variants/comparisons → advantages/limitations → applications → summary).
