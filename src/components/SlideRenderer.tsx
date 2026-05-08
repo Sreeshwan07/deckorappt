@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { templates } from "@/lib/templates";
 
@@ -20,7 +21,7 @@ interface SlideRendererProps {
   className?: string;
 }
 
-export default function SlideRenderer({
+function SlideRendererBase({
   slide,
   templateId,
   slideIndex,
@@ -116,3 +117,6 @@ export default function SlideRenderer({
     </div>
   );
 }
+
+const SlideRenderer = memo(SlideRendererBase);
+export default SlideRenderer;
