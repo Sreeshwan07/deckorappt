@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { templates } from "@/lib/templates";
+import { useAutoShrink } from "@/hooks/use-fit-scale";
 
 interface SlideData {
   title: string;
@@ -32,7 +33,6 @@ function SlideRendererBase({
 }: SlideRendererProps) {
   const t = templates[templateId] || templates.business;
   const isTitleSlide = isTitle || slideIndex === 0;
-  // Strip emojis, decorative symbols, and stray punctuation from headings
   const cleanTitle = (slide.title || "")
     .replace(/[\p{Extended_Pictographic}\u2600-\u27BF\u{1F000}-\u{1FFFF}]/gu, "")
     .replace(/[*_~`#>•●◆◇★☆✦✧✨➤➣➜→←↔»«]/g, "")
@@ -45,57 +45,67 @@ function SlideRendererBase({
   const textClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,90%)]" : t.textColor;
   const hasImage = !!slide.image_url && !isCenteredSlide;
 
+  // Auto-shrink wrapper: scales down font when content would overflow the slide box.
+  const { ref: fitRef } = useAutoShrink<HTMLDivElement>(
+    [cleanTitle, slide.content?.join("|"), hasImage, isCenteredSlide],
+    { min: 0.55, max: 1, step: 0.05 }
+  );
+
   return (
     <div
       onClick={onClick}
       className={cn("relative overflow-hidden select-none", className)}
     >
-      <div className={cn("w-full h-full flex flex-col justify-center rounded-xl", bg)}>
+      <div className={cn("w-full h-full flex flex-col rounded-xl overflow-hidden", bg)}>
         {!isCenteredSlide && (
-          <div className={cn("absolute top-0 left-0 right-0 h-1", t.accentLine)} />
+          <div className={cn("absolute top-0 left-0 right-0 h-1 z-10", t.accentLine)} />
         )}
 
-        <div className={cn(
-          "flex-1 flex",
-          hasImage ? "flex-row" : "flex-col justify-center",
-          isCenteredSlide ? "p-[8%] text-center items-center flex-col" : "p-[6%]"
-        )}>
-          <div className={cn(hasImage ? "flex-1 flex flex-col justify-center pr-[4%]" : "w-full")}>
+        <div
+          ref={fitRef}
+          style={{ fontSize: "calc(1em * var(--auto-fs, 1))" }}
+          className={cn(
+            "flex-1 flex w-full h-full overflow-hidden",
+            hasImage ? "flex-row" : "flex-col justify-center",
+            isCenteredSlide ? "p-[6%] text-center items-center justify-center flex-col" : "p-[5%]"
+          )}
+        >
+          <div className={cn(
+            "flex flex-col justify-center min-w-0 min-h-0",
+            hasImage ? "flex-1 pr-[4%]" : "w-full"
+          )}>
             <h2 className={cn(
-              "font-bold leading-[1.15] mb-6 tracking-tight",
+              "font-bold leading-[1.15] mb-[0.5em] tracking-tight break-words",
               titleClr,
-              isCenteredSlide ? "text-[3.6em]" : "text-[2.75em]"
+              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
             )}>
               {cleanTitle}
             </h2>
 
             {slide.content.length > 0 && (
-              <ul className={cn("space-y-4", isCenteredSlide ? "mt-6" : "mt-4")}>
+              <ul className={cn("space-y-[0.6em] min-h-0", isCenteredSlide && "mt-[0.4em]")}>
                 {slide.content.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
                   const isFormula = bullet.startsWith("Formula:") || bullet.startsWith("Equation:");
                   const isDefinition = bullet.startsWith("Definition:");
                   const isParagraph = bullet.length > 120 && !isExample && !isFormula;
-                  const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
-                      "flex items-start gap-3 font-medium",
+                      "flex items-start gap-[0.6em] font-medium break-words",
                       textClr,
-                      isCenteredSlide ? "text-[1.5em] justify-center leading-relaxed" : "text-[1.375em] leading-[1.6]",
-                      isExample && "mt-2 italic opacity-90",
-                      isFormula && "mt-3 font-mono text-center justify-center text-[1.2em]",
-                      isDefinition && "mt-1 font-medium",
-                      isParagraph && "mt-2"
+                      isCenteredSlide ? "text-[1.35em] justify-center leading-relaxed" : "text-[1.2em] leading-[1.5]",
+                      isExample && "italic opacity-90",
+                      isFormula && "font-mono text-center justify-center text-[1.05em]",
                     )}>
-                      {!isCenteredSlide && !isParagraph && !isFormula && (
+                      {!isCenteredSlide && !isFormula && (
                         <span className={cn(
-                          "mt-[0.5em] w-[0.38em] h-[0.38em] rounded-full shrink-0",
+                          "mt-[0.55em] w-[0.35em] h-[0.35em] rounded-full shrink-0",
                           isExample ? "bg-amber-400" : isDefinition ? "bg-emerald-400" : t.bulletColor
                         )} />
                       )}
                       <span className={cn(
-                        isKeyword && "font-medium",
-                        isFormula && "px-[8%] py-1 rounded bg-black/5 w-full text-center"
+                        "min-w-0",
+                        isFormula && "px-[6%] py-[0.2em] rounded bg-black/5 w-full text-center"
                       )}>{bullet}</span>
                     </li>
                   );
@@ -105,18 +115,18 @@ function SlideRendererBase({
           </div>
 
           {hasImage && (
-            <div className="w-[40%] shrink-0 flex items-center justify-center">
+            <div className="w-[38%] shrink-0 flex items-center justify-center min-h-0">
               <img
                 src={slide.image_url!}
                 alt={slide.title}
-                className="w-full h-auto max-h-full rounded-lg object-cover shadow-lg"
+                className="max-w-full max-h-full rounded-lg object-cover shadow-lg"
                 loading="lazy"
               />
             </div>
           )}
         </div>
 
-        <div className={cn("absolute bottom-3 right-5 text-[0.55em] opacity-30", textClr)}>
+        <div className={cn("absolute bottom-3 right-5 text-[0.5em] opacity-30 z-10", textClr)}>
           {slideIndex + 1} / {totalSlides}
         </div>
       </div>

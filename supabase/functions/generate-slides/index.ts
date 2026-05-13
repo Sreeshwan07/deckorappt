@@ -78,15 +78,20 @@ STRUCTURE (exactly ${slideCount} slides)
 - Slide ${slideCount}: layout="thanks"
 
 ==============================
-CONTENT QUALITY RULES
+CONTENT QUALITY RULES (STRICT — PREVENTS OVERFLOW)
 ==============================
 - Academic, precise, B.Tech standard. No filler, no repetition, no shallow one-liners.
-- Bullets must be SUBSTANTIVE (18-32 words each), explain the concept, not just name it.
+- Bullets MUST be 14-22 words each. NEVER exceed 22 words. NEVER write multi-sentence bullets.
+- Provide AT MOST 4 bullets per content slide (3 is ideal). Quality over quantity.
+- Intro paragraph: AT MOST 35 words (2 short sentences).
 - Use formal definitions and proper terminology. Prefer concrete examples over vague statements.
 - For technical topics: include at least ONE "formula" slide whenever any equation, complexity, or quantitative relation applies.
-- For evaluative topics or any topic with trade-offs: include a "pros_cons" slide.
-- For "X vs Y", variants, or alternatives: include a "comparison" slide.
-- Cover the FULL standard syllabus of the detected subject — do not skip core sub-topics.
+- For evaluative topics or any topic with trade-offs: include a "pros_cons" slide (3-4 pros, 3-4 cons, each ≤ 14 words).
+- For "X vs Y", variants, or alternatives: include a "comparison" slide (3-4 points per side, ≤ 12 words each).
+- For formula slides: 3-5 variables max, example ≤ 25 words.
+- Summary: 3-5 short impactful points (≤ 12 words each).
+- Cover the FULL standard syllabus of the detected subject — split across MORE slides instead of cramming.
+- If a sub-topic is too large for one slide, SPLIT it into two slides (e.g. "Working of X — Part 1" / "Part 2"). Never overflow a single slide.
 
 ==============================
 HEADING RULES (STRICT)
