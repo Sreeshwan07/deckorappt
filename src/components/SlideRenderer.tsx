@@ -32,7 +32,13 @@ function SlideRendererBase({
 }: SlideRendererProps) {
   const t = templates[templateId] || templates.business;
   const isTitleSlide = isTitle || slideIndex === 0;
-  const isThankYou = slide.title.toLowerCase().includes("thank you");
+  // Strip emojis, decorative symbols, and stray punctuation from headings
+  const cleanTitle = (slide.title || "")
+    .replace(/[\p{Extended_Pictographic}\u2600-\u27BF\u{1F000}-\u{1FFFF}]/gu, "")
+    .replace(/[*_~`#>•●◆◇★☆✦✧✨➤➣➜→←↔»«]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  const isThankYou = cleanTitle.toLowerCase().includes("thank you");
   const isCenteredSlide = isTitleSlide || isThankYou;
   const bg = isCenteredSlide ? t.slideAccentBg : t.slideBg;
   const titleClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,100%)]" : t.titleColor;
