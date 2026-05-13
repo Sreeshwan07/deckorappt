@@ -231,6 +231,14 @@ Return ONLY valid JSON with a "slides" array.`;
 
     // Normalize to a stable shape: keep `bullets` for backward-compat (array of content strings)
     // but also pass the structured `layout` payload through.
+    const cleanHeading = (str: string) =>
+      (str || "")
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+        .replace(/[*_~`#>•●◆◇★☆✦✧✨➤➣➜→←↔»«]/g, "")
+        .replace(/[!?.,:;]+$/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
     const slides = rawSlides.map((s: any) => {
       const flat: string[] = [];
       if (s.paragraph) flat.push(s.paragraph);
@@ -244,7 +252,7 @@ Return ONLY valid JSON with a "slides" array.`;
 
       return {
         layout: s.layout || "content",
-        title: s.title,
+        title: cleanHeading(s.title),
         subtitle: s.subtitle ?? null,
         paragraph: s.paragraph ?? null,
         bullets: Array.isArray(s.bullets) ? s.bullets : [],
