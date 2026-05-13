@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SlideRenderer from "@/components/SlideRenderer";
+import { useFitScale } from "@/hooks/use-fit-scale";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface SlideData {
@@ -17,6 +18,9 @@ interface SlideshowModeProps {
   onSlideChange: (idx: number) => void;
   onExit: () => void;
 }
+
+const BASE_W = 1920;
+const BASE_H = 1080;
 
 export default function SlideshowMode({ slides, templateId, currentSlide, onSlideChange, onExit }: SlideshowModeProps) {
   const goNext = useCallback(() => {
@@ -42,18 +46,31 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
     return () => { document.exitFullscreen?.().catch(() => {}); };
   }, []);
 
+  const { containerRef, scale } = useFitScale(BASE_W, BASE_H);
+
   return (
     <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentSlide}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          transition={{ duration: 0.3 }}
-          className="w-full h-full flex items-center justify-center"
-        >
-          <div className="w-full h-full max-w-[100vw] max-h-[100vh] aspect-video" style={{ fontSize: "clamp(24px, 2.4vw, 44px)" }}>
+      <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="absolute"
+            style={{
+              width: BASE_W,
+              height: BASE_H,
+              left: "50%",
+              top: "50%",
+              marginLeft: -BASE_W / 2,
+              marginTop: -BASE_H / 2,
+              transform: `scale(${scale})`,
+              transformOrigin: "center center",
+              fontSize: 32,
+            }}
+          >
             <SlideRenderer
               slide={slides[currentSlide]}
               templateId={templateId}
@@ -61,11 +78,10 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
               totalSlides={slides.length}
               className="w-full h-full"
             />
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      {/* Controls - auto-hide */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-4 opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/60 to-transparent">
         <button
           onClick={goPrev}
@@ -74,11 +90,9 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-
         <span className="text-white/60 text-sm font-medium">
           {currentSlide + 1} / {slides.length}
         </span>
-
         <button
           onClick={goNext}
           disabled={currentSlide === slides.length - 1}
@@ -90,7 +104,7 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
 
       <button
         onClick={onExit}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 transition-colors opacity-0 hover:opacity-100"
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 transition-colors"
       >
         <X className="h-5 w-5" />
       </button>
