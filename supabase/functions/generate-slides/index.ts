@@ -87,7 +87,25 @@ CONTENT QUALITY RULES
 - For evaluative topics or any topic with trade-offs: include a "pros_cons" slide.
 - For "X vs Y", variants, or alternatives: include a "comparison" slide.
 - Cover the FULL standard syllabus of the detected subject — do not skip core sub-topics.
-- Every "intro" and "content" slide should have an image_prompt for a relevant supporting visual.
+
+==============================
+HEADING RULES (STRICT)
+==============================
+- Titles MUST be clean, professional, academic style.
+- NO emojis, NO decorative symbols (★ ✨ 🚀 → • etc.), NO markdown (** __ ##), NO trailing punctuation.
+- Title case, max 8 words. Example: "Advantages of DBMS" — NOT "✨ Advantages of DBMS 🚀".
+
+==============================
+IMAGE RULES (STRICT — TOPIC-RELEVANT ONLY)
+==============================
+- Every "intro" and "content" slide must include an image_prompt that is DIRECTLY related to the slide's specific sub-topic and the overall presentation topic.
+- The image_prompt must describe a professional, photorealistic or clean-illustration visual SPECIFIC to the subject domain. Examples:
+  · DBMS slide → "clean diagram of relational database tables with primary/foreign keys, modern flat illustration"
+  · Operating Systems → "schematic of OS kernel layers with process and memory management blocks"
+  · Machine Learning → "neural network graph with labeled input, hidden, and output layers"
+  · Networking → "network topology diagram with routers, switches and client devices"
+- NEVER use generic stock-photo prompts ("business meeting", "people working", "abstract background"). NEVER use cartoonish or decorative imagery unrelated to the topic.
+- For pros_cons / comparison / formula / summary / title / thanks slides → omit image_prompt (set to empty/null).
 
 ==============================
 OUTPUT SCHEMA (per slide)
