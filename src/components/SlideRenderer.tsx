@@ -64,9 +64,9 @@ function SlideRendererBase({
             <h2 className={cn(
               "font-bold leading-[1.15] mb-6 tracking-tight",
               titleClr,
-              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
+              isCenteredSlide ? "text-[3.6em]" : "text-[2.75em]"
             )}>
-              {slide.title}
+              {cleanTitle}
             </h2>
 
             {slide.content.length > 0 && (
