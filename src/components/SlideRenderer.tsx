@@ -32,7 +32,13 @@ function SlideRendererBase({
 }: SlideRendererProps) {
   const t = templates[templateId] || templates.business;
   const isTitleSlide = isTitle || slideIndex === 0;
-  const isThankYou = slide.title.toLowerCase().includes("thank you");
+  // Strip emojis, decorative symbols, and stray punctuation from headings
+  const cleanTitle = (slide.title || "")
+    .replace(/[\p{Extended_Pictographic}\u2600-\u27BF\u{1F000}-\u{1FFFF}]/gu, "")
+    .replace(/[*_~`#>•●◆◇★☆✦✧✨➤➣➜→←↔»«]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  const isThankYou = cleanTitle.toLowerCase().includes("thank you");
   const isCenteredSlide = isTitleSlide || isThankYou;
   const bg = isCenteredSlide ? t.slideAccentBg : t.slideBg;
   const titleClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,100%)]" : t.titleColor;
@@ -58,9 +64,9 @@ function SlideRendererBase({
             <h2 className={cn(
               "font-bold leading-[1.15] mb-6 tracking-tight",
               titleClr,
-              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
+              isCenteredSlide ? "text-[3.6em]" : "text-[2.75em]"
             )}>
-              {slide.title}
+              {cleanTitle}
             </h2>
 
             {slide.content.length > 0 && (
@@ -73,9 +79,9 @@ function SlideRendererBase({
                   const isKeyword = bullet.startsWith("**") || bullet.includes(": ");
                   return (
                     <li key={i} className={cn(
-                      "flex items-start gap-3",
+                      "flex items-start gap-3 font-medium",
                       textClr,
-                      isCenteredSlide ? "text-[1.35em] justify-center leading-relaxed" : "text-[1.15em] leading-[1.55]",
+                      isCenteredSlide ? "text-[1.5em] justify-center leading-relaxed" : "text-[1.375em] leading-[1.6]",
                       isExample && "mt-2 italic opacity-90",
                       isFormula && "mt-3 font-mono text-center justify-center text-[1.2em]",
                       isDefinition && "mt-1 font-medium",
