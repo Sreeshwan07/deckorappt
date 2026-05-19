@@ -168,20 +168,20 @@ export default function SlideEditor() {
     setSlides((prev) => prev.map((s, i) => i === idx ? { ...s, image_url: null } : s));
   };
 
-  const handleExport = async () => {
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const handleExport = async (format: ExportFormat = "pptx") => {
     if (!presentation) return;
-    // Payment check - admin bypasses
+    setShowExportMenu(false);
     if (!isAdmin && !presentation.is_paid) {
       toast({ title: "Payment required", description: "₹20 per download. Payment integration coming soon!", variant: "destructive" });
-      // When Razorpay is integrated, trigger payment here
-      // For now, allow download for testing
     }
     setExporting(true);
     try {
-      await exportToPptx(presentation.title, slides, presentation.template);
-      toast({ title: "PPTX downloaded!" });
-    } catch {
-      toast({ title: "Export failed", variant: "destructive" });
+      await exportPresentation(format, presentation.title, slides, presentation.template);
+      toast({ title: `${format.toUpperCase()} downloaded!` });
+    } catch (err) {
+      toast({ title: "Export failed", description: err instanceof Error ? err.message : "Try again", variant: "destructive" });
     } finally {
       setExporting(false);
     }
