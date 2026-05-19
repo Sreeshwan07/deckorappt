@@ -94,13 +94,10 @@ export default function Index() {
             transition={{ duration: 0.6 }}
             className="space-y-8"
           >
-            {/* status pill */}
+            {/* minimal eyebrow */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-60" />
-                <span className="relative h-2 w-2 rounded-full bg-primary" />
-              </span>
-              <span className="font-mono-cy uppercase tracking-widest text-foreground/80">AI engine online</span>
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="font-mono-cy uppercase tracking-widest text-foreground/70">AI presentation studio</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-display leading-[1.02] tracking-tighter">
