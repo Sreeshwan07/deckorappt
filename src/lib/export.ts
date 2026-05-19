@@ -251,7 +251,7 @@ export async function exportToDocx(
           if (m) {
             const ext = m[1].toLowerCase();
             const bin = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-            const type = (ext === "jpg" ? "jpeg" : ext) as "png" | "jpeg" | "gif" | "bmp";
+            const type = (ext === "jpeg" ? "jpg" : ext) as "png" | "jpg" | "gif" | "bmp";
             children.push(
               new Paragraph({
                 alignment: AlignmentType.CENTER,
