@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import SlideRenderer from "@/components/SlideRenderer";
 import SlideshowMode from "@/components/SlideshowMode";
 import { templates } from "@/lib/templates";
-import { exportToPptx } from "@/lib/export";
+import { exportPresentation, type ExportFormat } from "@/lib/export";
 import { isAdminUser } from "@/lib/admin";
 import {
   ArrowLeft, Plus, Trash2, Download, Loader2, Pencil, Check, X,
