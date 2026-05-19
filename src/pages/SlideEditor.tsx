@@ -253,10 +253,29 @@ export default function SlideEditor() {
             <Play className="h-4 w-4" /> Present
           </Button>
 
-          <Button variant="gradient" size="sm" onClick={handleExport} disabled={exporting} className="glow-purple-sm">
-            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {isAdmin ? "Export Free" : "Export PPTX"}
-          </Button>
+          <div className="relative">
+            <Button variant="gradient" size="sm" onClick={() => setShowExportMenu((v) => !v)} disabled={exporting} className="glow-purple-sm">
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {isAdmin ? "Export Free" : "Export"}
+            </Button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 top-full mt-2 w-44 glass-card-strong rounded-xl shadow-2xl z-50 p-1.5">
+                  {(["pptx", "pdf", "docx"] as ExportFormat[]).map((fmt) => (
+                    <button
+                      key={fmt}
+                      onClick={() => handleExport(fmt)}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-secondary/60 text-foreground flex items-center gap-2"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-primary" />
+                      Download .{fmt}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
           <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
             <Menu className="h-4 w-4" />
