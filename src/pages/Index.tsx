@@ -185,6 +185,36 @@ export default function Index() {
         </div>
       </section>
 
+      <section id="pricing" className="py-24 relative">
+        <div className="max-w-5xl mx-auto px-6 mb-12 text-center">
+          <div className="inline-block text-[10px] font-mono-cy uppercase tracking-widest text-primary mb-4">· Pricing ·</div>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-3">Simple, transparent pricing</h2>
+          <p className="text-muted-foreground">Free to try. Pay only when you download.</p>
+        </div>
+        <div className="max-w-4xl mx-auto px-6 grid sm:grid-cols-2 gap-5 mb-16">
+          <div className="glass-card rounded-2xl p-8">
+            <div className="text-xs font-mono-cy uppercase tracking-widest text-muted-foreground mb-2">Free</div>
+            <div className="text-4xl font-bold font-display mb-1">₹0</div>
+            <p className="text-sm text-muted-foreground mb-6">Generate, preview, and edit unlimited decks.</p>
+            <ul className="text-sm space-y-2 text-foreground/80">
+              <li>· Unlimited AI generations</li>
+              <li>· Full editor access</li>
+              <li>· Present mode</li>
+            </ul>
+          </div>
+          <div className="glass-card-strong neon-border rounded-2xl p-8">
+            <div className="text-xs font-mono-cy uppercase tracking-widest text-primary mb-2">Pay per download</div>
+            <div className="text-4xl font-bold font-display mb-1">₹20<span className="text-base text-muted-foreground font-normal"> / export</span></div>
+            <p className="text-sm text-muted-foreground mb-6">Export to PPTX, PDF, or DOCX whenever you need.</p>
+            <ul className="text-sm space-y-2 text-foreground/80">
+              <li>· High-fidelity 1920×1080 exports</li>
+              <li>· Editable PowerPoint output</li>
+              <li>· Topic-relevant visuals</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-24 relative">
         <div className="max-w-3xl mx-auto px-6 text-center">
