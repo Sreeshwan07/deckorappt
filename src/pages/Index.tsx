@@ -59,8 +59,8 @@ export default function Index() {
 
           <div className="hidden md:flex items-center gap-7 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Templates</a>
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <button onClick={() => user ? navigate("/create") : setAuthOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors">Templates</button>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
           </div>
 
           <div className="flex items-center gap-2">
