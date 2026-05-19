@@ -24,9 +24,32 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are a senior academic presentation designer creating seminar-ready slides for B.Tech, engineering and professional audiences.
+    const modeKey = (tone || "professional").toLowerCase();
+    const modeBlock =
+      modeKey === "educational"
+        ? `MODE: EDUCATIONAL
+- Audience: students (school → B.Tech). Goal: deep understanding.
+- Content is DETAILED and INFORMATIVE. Use formal definitions, step-by-step explanations, worked examples, formulas, and clear comparisons.
+- Bullets 16–22 words. Up to 4 bullets per content slide. Intro paragraph up to 35 words.
+- Prefer "formula", "comparison", and "pros_cons" layouts whenever the topic supports them.
+- Image prompts MUST be educational diagrams (labeled schematics, charts, architecture diagrams) — never decorative photos.`
+        : modeKey === "creative"
+        ? `MODE: CREATIVE
+- Audience: creative / Gen-Z / storytelling decks. Goal: visual impact.
+- Content is SHORT and PUNCHY. 2–3 bullets per slide, 8–14 words each. Intro paragraph ≤ 22 words.
+- Use evocative, narrative phrasing. Avoid heavy jargon. Favor "intro", "content", and "summary" layouts; minimize formula/comparison unless essential.
+- Image prompts MUST be aesthetic, editorial, modern visuals related to the topic — clean photography, abstract gradients, or stylized illustrations.`
+        : `MODE: PROFESSIONAL
+- Audience: corporate / startup / investor decks. Goal: clarity and impact.
+- Content is CONCISE and EXECUTIVE. 3 bullets per slide, 10–16 words each. Intro paragraph ≤ 28 words.
+- Use business terminology, KPIs, frameworks, and outcomes. Prefer "intro", "content", "comparison", and "summary".
+- Image prompts MUST be professional business visuals: clean infographics, data charts, modern office or product imagery related to the topic.`;
 
-Generate exactly ${slideCount} slides about the given topic in a ${tone || "professional academic"} tone.
+    const systemPrompt = `You are a senior presentation designer creating ready-to-present decks.
+
+${modeBlock}
+
+Generate exactly ${slideCount} slides about the given topic.
 
 ==============================
 EDUCATION-LEVEL & SUBJECT DETECTION

@@ -59,8 +59,8 @@ export default function Index() {
 
           <div className="hidden md:flex items-center gap-7 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Templates</a>
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <button onClick={() => user ? navigate("/create") : setAuthOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors">Templates</button>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
           </div>
 
           <div className="flex items-center gap-2">
@@ -94,13 +94,10 @@ export default function Index() {
             transition={{ duration: 0.6 }}
             className="space-y-8"
           >
-            {/* status pill */}
+            {/* minimal eyebrow */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-60" />
-                <span className="relative h-2 w-2 rounded-full bg-primary" />
-              </span>
-              <span className="font-mono-cy uppercase tracking-widest text-foreground/80">AI engine online</span>
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="font-mono-cy uppercase tracking-widest text-foreground/70">AI presentation studio</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-display leading-[1.02] tracking-tighter">
@@ -184,6 +181,36 @@ export default function Index() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="py-24 relative">
+        <div className="max-w-5xl mx-auto px-6 mb-12 text-center">
+          <div className="inline-block text-[10px] font-mono-cy uppercase tracking-widest text-primary mb-4">· Pricing ·</div>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-3">Simple, transparent pricing</h2>
+          <p className="text-muted-foreground">Free to try. Pay only when you download.</p>
+        </div>
+        <div className="max-w-4xl mx-auto px-6 grid sm:grid-cols-2 gap-5 mb-16">
+          <div className="glass-card rounded-2xl p-8">
+            <div className="text-xs font-mono-cy uppercase tracking-widest text-muted-foreground mb-2">Free</div>
+            <div className="text-4xl font-bold font-display mb-1">₹0</div>
+            <p className="text-sm text-muted-foreground mb-6">Generate, preview, and edit unlimited decks.</p>
+            <ul className="text-sm space-y-2 text-foreground/80">
+              <li>· Unlimited AI generations</li>
+              <li>· Full editor access</li>
+              <li>· Present mode</li>
+            </ul>
+          </div>
+          <div className="glass-card-strong neon-border rounded-2xl p-8">
+            <div className="text-xs font-mono-cy uppercase tracking-widest text-primary mb-2">Pay per download</div>
+            <div className="text-4xl font-bold font-display mb-1">₹20<span className="text-base text-muted-foreground font-normal"> / export</span></div>
+            <p className="text-sm text-muted-foreground mb-6">Export to PPTX, PDF, or DOCX whenever you need.</p>
+            <ul className="text-sm space-y-2 text-foreground/80">
+              <li>· High-fidelity 1920×1080 exports</li>
+              <li>· Editable PowerPoint output</li>
+              <li>· Topic-relevant visuals</li>
+            </ul>
           </div>
         </div>
       </section>
