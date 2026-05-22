@@ -164,7 +164,7 @@ Return ONLY valid JSON with a "slides" array.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Create a detailed academic presentation about: ${topic}` },
