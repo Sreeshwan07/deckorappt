@@ -184,6 +184,21 @@ export default function CreatePresentation() {
               </div>
             </div>
 
+            {creditsError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">AI credits exhausted</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Top up your workspace balance to continue generating presentations.</p>
+                </div>
+                <Button size="sm" variant="default" asChild>
+                  <a href={TOPUP_URL} target="_blank" rel="noopener noreferrer">
+                    Add credits <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </a>
+                </Button>
+              </div>
+            )}
+
             <Button variant="gradient" size="lg" className="w-full glow-purple" onClick={handleGenerate} disabled={generating || !topic.trim()}>
               {generating ? (
                 <><Loader2 className="h-5 w-5 animate-spin" />Generating slides...</>
