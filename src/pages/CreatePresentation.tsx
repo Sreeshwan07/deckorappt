@@ -41,6 +41,7 @@ export default function CreatePresentation() {
   const handleGenerate = async () => {
     if (!topic.trim() || !user) return;
     setGenerating(true);
+    setCreditsError(null);
     let createdPresId: string | null = null;
     try {
       const { data: pres, error: presError } = await supabase
