@@ -30,6 +30,8 @@ export default function CreatePresentation() {
   const [tone, setTone] = useState("professional");
   const [template, setTemplate] = useState("academicmodern");
   const [generating, setGenerating] = useState(false);
+  const [creditsError, setCreditsError] = useState<string | null>(null);
+  const TOPUP_URL = "https://lovable.dev/settings/workspace?tab=usage";
 
   useEffect(() => {
     const prefill = searchParams.get("topic");
