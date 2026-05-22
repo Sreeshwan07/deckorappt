@@ -100,6 +100,8 @@ export default function CreatePresentation() {
         await supabase.from("presentations").delete().eq("id", createdPresId);
       }
       const message = err instanceof Error ? err.message : "Generation failed";
+      const isCredits = /402|credit|exhaust|insufficient.*fund/i.test(message);
+      if (isCredits) setCreditsError(message);
       toast({ title: "Generation failed", description: message, variant: "destructive" });
     } finally {
       setGenerating(false);
