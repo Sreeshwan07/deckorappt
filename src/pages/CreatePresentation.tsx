@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Briefcase, Palette, GraduationCap } from "lucide-react";
+import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, AlertCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { templateList } from "@/lib/templates";
@@ -30,6 +30,8 @@ export default function CreatePresentation() {
   const [tone, setTone] = useState("professional");
   const [template, setTemplate] = useState("academicmodern");
   const [generating, setGenerating] = useState(false);
+  const [creditsError, setCreditsError] = useState<string | null>(null);
+  const TOPUP_URL = "https://lovable.dev/settings/workspace?tab=usage";
 
   useEffect(() => {
     const prefill = searchParams.get("topic");
@@ -39,6 +41,7 @@ export default function CreatePresentation() {
   const handleGenerate = async () => {
     if (!topic.trim() || !user) return;
     setGenerating(true);
+    setCreditsError(null);
     let createdPresId: string | null = null;
     try {
       const { data: pres, error: presError } = await supabase
@@ -97,6 +100,8 @@ export default function CreatePresentation() {
         await supabase.from("presentations").delete().eq("id", createdPresId);
       }
       const message = err instanceof Error ? err.message : "Generation failed";
+      const isCredits = /402|credit|exhaust|insufficient.*fund/i.test(message);
+      if (isCredits) setCreditsError(message);
       toast({ title: "Generation failed", description: message, variant: "destructive" });
     } finally {
       setGenerating(false);
@@ -178,6 +183,21 @@ export default function CreatePresentation() {
                 ))}
               </div>
             </div>
+
+            {creditsError && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">AI credits exhausted</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Top up your workspace balance to continue generating presentations.</p>
+                </div>
+                <Button size="sm" variant="default" asChild>
+                  <a href={TOPUP_URL} target="_blank" rel="noopener noreferrer">
+                    Add credits <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </a>
+                </Button>
+              </div>
+            )}
 
             <Button variant="gradient" size="lg" className="w-full glow-purple" onClick={handleGenerate} disabled={generating || !topic.trim()}>
               {generating ? (
