@@ -39,6 +39,7 @@ export default function CreatePresentation() {
   const handleGenerate = async () => {
     if (!topic.trim() || !user) return;
     setGenerating(true);
+    let createdPresId: string | null = null;
     try {
       const { data: pres, error: presError } = await supabase
         .from("presentations")
@@ -46,41 +47,57 @@ export default function CreatePresentation() {
         .select()
         .single();
       if (presError) throw presError;
+      createdPresId = pres.id;
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
         body: { topic: topic.trim(), numSlides, tone, template },
       });
-      if (aiError) throw aiError;
+      if (aiError) {
+        // surface real reason (402 credits / 429 rate-limit / etc.)
+        const ctx: any = (aiError as any).context;
+        let msg = aiError.message || "Generation failed";
+        try {
+          const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+          if (body?.error) msg = body.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+      if (aiData?.error) throw new Error(aiData.error);
 
       const slides = aiData?.slides || [];
-      if (slides.length > 0) {
-        const slideRows = slides.map((s: any, i: number) => ({
-          presentation_id: pres.id,
-          slide_order: i,
-          title: s.title,
-          content: JSON.stringify(Array.isArray(s.content) && s.content.length > 0 ? s.content : (s.bullets || [])),
-          speaker_notes: s.notes || null,
-        }));
-        const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
-        if (slidesError) throw slidesError;
+      if (slides.length === 0) throw new Error("AI returned no slides. Please try again.");
 
-        if (insertedSlides) {
-          insertedSlides.slice(1).forEach((dbSlide: any, idx: number) => {
-            const aiSlide = slides[idx + 1];
-            if (aiSlide?.image_prompt) {
-              supabase.functions.invoke("generate-slide-image", {
-                body: { prompt: aiSlide.image_prompt, slideId: dbSlide.id },
-              }).catch(console.error);
-            }
-          });
-        }
+      const slideRows = slides.map((s: any, i: number) => ({
+        presentation_id: pres.id,
+        slide_order: i,
+        title: s.title,
+        content: JSON.stringify(Array.isArray(s.content) && s.content.length > 0 ? s.content : (s.bullets || [])),
+        speaker_notes: s.notes || null,
+      }));
+      const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
+      if (slidesError) throw slidesError;
+
+      if (insertedSlides) {
+        insertedSlides.slice(1).forEach((dbSlide: any, idx: number) => {
+          const aiSlide = slides[idx + 1];
+          if (aiSlide?.image_prompt) {
+            supabase.functions.invoke("generate-slide-image", {
+              body: { prompt: aiSlide.image_prompt, slideId: dbSlide.id },
+            }).catch(console.error);
+          }
+        });
       }
 
       await supabase.from("presentations").update({ status: "ready" }).eq("id", pres.id);
       toast({ title: "Presentation generated!" });
       navigate(`/editor/${pres.id}`);
     } catch (err: unknown) {
-      toast({ title: "Error", description: err instanceof Error ? err.message : "Generation failed", variant: "destructive" });
+      // cleanup orphan "generating" row so the dashboard isn't polluted
+      if (createdPresId) {
+        await supabase.from("presentations").delete().eq("id", createdPresId);
+      }
+      const message = err instanceof Error ? err.message : "Generation failed";
+      toast({ title: "Generation failed", description: message, variant: "destructive" });
     } finally {
       setGenerating(false);
     }
