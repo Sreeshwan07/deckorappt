@@ -28,7 +28,7 @@ export default function CreatePresentation() {
   const [topic, setTopic] = useState("");
   const [numSlides, setNumSlides] = useState(7);
   const [tone, setTone] = useState("professional");
-  const [template, setTemplate] = useState("academicmodern");
+  const [template, setTemplate] = useState("executive-modern");
   const [generating, setGenerating] = useState(false);
   const [creditsError, setCreditsError] = useState<string | null>(null);
   const TOPUP_URL = "https://lovable.dev/settings/workspace?tab=usage";
@@ -77,19 +77,10 @@ export default function CreatePresentation() {
         content: JSON.stringify(Array.isArray(s.content) && s.content.length > 0 ? s.content : (s.bullets || [])),
         speaker_notes: s.notes || null,
       }));
-      const { data: insertedSlides, error: slidesError } = await supabase.from("slides").insert(slideRows).select();
+      const { error: slidesError } = await supabase.from("slides").insert(slideRows);
       if (slidesError) throw slidesError;
-
-      if (insertedSlides) {
-        insertedSlides.slice(1).forEach((dbSlide: any, idx: number) => {
-          const aiSlide = slides[idx + 1];
-          if (aiSlide?.image_prompt) {
-            supabase.functions.invoke("generate-slide-image", {
-              body: { prompt: aiSlide.image_prompt, slideId: dbSlide.id },
-            }).catch(console.error);
-          }
-        });
-      }
+      // NOTE: Images are no longer auto-generated to keep generation under ~10s and save credits.
+      // Users add images per slide from the editor.
 
       await supabase.from("presentations").update({ status: "ready" }).eq("id", pres.id);
       toast({ title: "Presentation generated!" });
