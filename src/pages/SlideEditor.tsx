@@ -10,7 +10,7 @@ import SlideRenderer from "@/components/SlideRenderer";
 import SlideshowMode from "@/components/SlideshowMode";
 import { templates } from "@/lib/templates";
 import { exportPresentation, type ExportFormat } from "@/lib/export";
-import { isAdminUser } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/admin";
 import {
   ArrowLeft, Plus, Trash2, Download, Loader2, Pencil, Check, X,
   ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw, Play,
@@ -55,7 +55,7 @@ export default function SlideEditor() {
   const [slideshowActive, setSlideshowActive] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isAdmin = isAdminUser(user?.email);
+  const isAdmin = useIsAdmin();
 
   useEffect(() => {
     if (!id) return;
@@ -175,6 +175,7 @@ export default function SlideEditor() {
     setShowExportMenu(false);
     if (!isAdmin && !presentation.is_paid) {
       toast({ title: "Payment required", description: "₹20 per download. Payment integration coming soon!", variant: "destructive" });
+      return;
     }
     setExporting(true);
     try {
