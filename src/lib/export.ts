@@ -22,14 +22,17 @@ interface SlideData {
 
 export type ExportFormat = "pptx" | "pdf" | "docx";
 
-/** Sanitize a presentation title into a safe filename stem. */
+/** Sanitize only filesystem-illegal chars. Keep spaces and topic readability.
+ *  e.g. "Machine Learning"  →  "Machine Learning.pptx"
+ */
 export function sanitizeFilename(name: string): string {
-  return (name || "presentation")
+  const cleaned = (name || "presentation")
     .trim()
-    .replace(/[\\/:*?"<>|]+/g, "")
-    .replace(/\s+/g, "_")
-    .replace(/_+/g, "_")
-    .slice(0, 80) || "presentation";
+    .replace(/[\\/:*?"<>|\x00-\x1F]+/g, "") // illegal chars only
+    .replace(/\s+/g, " ")
+    .slice(0, 120)
+    .trim();
+  return cleaned || "presentation";
 }
 
 async function urlToBase64(url: string): Promise<string | null> {
@@ -56,9 +59,9 @@ export async function exportToPptx(
   slides: SlideData[],
   templateId: string
 ): Promise<void> {
-  const t = templates[templateId] || templates.business;
+  const t = templates[templateId] || templates["executive-modern"] || templates.business;
   const pptx = new pptxgenjs();
-  pptx.layout = "LAYOUT_WIDE";
+  pptx.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 in
   pptx.title = presentationTitle;
 
   for (let idx = 0; idx < slides.length; idx++) {
@@ -73,7 +76,7 @@ export async function exportToPptx(
 
     if (!isCenteredSlide) {
       pptSlide.addShape(pptxgenjs.ShapeType.rect, {
-        x: 0, y: 0, w: "100%", h: 0.06,
+        x: 0, y: 0, w: "100%", h: 0.07,
         fill: { color: t.exportAccentColor.replace("#", "") },
         line: { color: t.exportAccentColor.replace("#", ""), width: 0 },
       });
@@ -81,12 +84,13 @@ export async function exportToPptx(
 
     const textWidth = hasImage ? 7.3 : (isCenteredSlide ? 11.33 : 11.73);
 
+    // Title — 44pt content / 52pt title slide
     pptSlide.addText(slide.title, {
       x: isCenteredSlide ? 1 : 0.8,
-      y: isCenteredSlide ? 2.0 : 0.55,
+      y: isCenteredSlide ? 2.0 : 0.4,
       w: textWidth,
-      h: 1.3,
-      fontSize: isCenteredSlide ? 40 : 32,
+      h: 1.4,
+      fontSize: isCenteredSlide ? 52 : 38,
       fontFace: t.fontFamily,
       color: t.exportTitleColor.replace("#", ""),
       bold: true,
@@ -94,18 +98,22 @@ export async function exportToPptx(
       valign: "middle",
     });
 
-    if (slide.content.length > 0) {
-      const bulletText = slide.content.map((b) => {
+    // Body bullets — cap to 6, auto-shrink past 4
+    const body = (slide.content || []).slice(0, 6);
+    if (body.length > 0) {
+      const sizeForCount = body.length <= 3 ? 24 : body.length <= 4 ? 22 : body.length <= 5 ? 20 : 18;
+      const bulletText = body.map((b) => {
         const isExample = b.startsWith("Example:");
         const isFormula = b.startsWith("Formula:") || b.startsWith("Equation:");
         const isParagraph = b.length > 120 && !isExample && !isFormula;
         return {
           text: b,
           options: {
-            fontSize: isCenteredSlide ? 20 : (isParagraph ? 16 : 18),
+            fontSize: isCenteredSlide ? 22 : (isParagraph ? Math.min(sizeForCount, 20) : sizeForCount),
             color: isExample ? "B8860B" : t.exportTextColor.replace("#", ""),
             italic: isExample,
             bold: isFormula,
+            fontFace: isFormula ? "Consolas" : t.fontFamily,
             bullet: isCenteredSlide || isParagraph || isFormula
               ? false
               : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
@@ -116,10 +124,10 @@ export async function exportToPptx(
         };
       });
       pptSlide.addText(bulletText as any, {
-        x: isCenteredSlide ? 2 : 1.0,
-        y: isCenteredSlide ? 3.4 : 1.9,
-        w: hasImage ? 6.5 : (isCenteredSlide ? 9.33 : 11.33),
-        h: isCenteredSlide ? 3.0 : 5.0,
+        x: isCenteredSlide ? 2 : 0.9,
+        y: isCenteredSlide ? 3.6 : 1.8,
+        w: hasImage ? 6.5 : (isCenteredSlide ? 9.33 : 11.5),
+        h: isCenteredSlide ? 3.0 : 5.2,
         fontFace: t.fontFamily,
         valign: "top",
       });
@@ -130,7 +138,7 @@ export async function exportToPptx(
       if (data) {
         try {
           pptSlide.addImage({ data, x: 8.3, y: 1.2, w: 4.7, h: 4.8, sizing: { type: "contain", w: 4.7, h: 4.8 } });
-        } catch {/* skip */}
+        } catch { /* skip */ }
       }
     }
 
@@ -159,7 +167,6 @@ export async function exportToPdf(
   const { createRoot } = await import("react-dom/client");
   const React = await import("react");
 
-  // Off-screen 1920x1080 staging
   const stage = document.createElement("div");
   stage.style.cssText = "position:fixed;left:-99999px;top:0;width:1920px;height:1080px;font-size:32px;";
   document.body.appendChild(stage);
@@ -179,9 +186,13 @@ export async function exportToPdf(
             className: "w-[1920px] h-[1080px]",
           })
         );
-        // wait a frame for layout + images
-        setTimeout(resolve, slides[i].image_url ? 500 : 120);
+        // Wait for layout + image decode
+        setTimeout(resolve, slides[i].image_url ? 600 : 150);
       });
+
+      // Ensure any <img> inside the stage is fully decoded
+      const imgs = stage.querySelectorAll("img");
+      await Promise.all(Array.from(imgs).map(img => (img as HTMLImageElement).decode().catch(() => undefined)));
 
       const canvas = await html2canvas(stage, { scale: 1, backgroundColor: null, useCORS: true, logging: false });
       const img = canvas.toDataURL("image/jpeg", 0.92);
@@ -203,7 +214,7 @@ export async function exportToDocx(
   slides: SlideData[],
   templateId: string
 ): Promise<void> {
-  const t = templates[templateId] || templates.business;
+  const t = templates[templateId] || templates["executive-modern"] || templates.business;
   const titleColor = t.exportTitleColor.replace("#", "");
   const textColor = t.exportTextColor.replace("#", "");
   const accentColor = t.exportAccentColor.replace("#", "");
@@ -213,13 +224,7 @@ export async function exportToDocx(
       alignment: AlignmentType.CENTER,
       spacing: { after: 400 },
       children: [
-        new TextRun({
-          text: presentationTitle,
-          bold: true,
-          size: 56,
-          color: titleColor,
-          font: t.fontFamily,
-        }),
+        new TextRun({ text: presentationTitle, bold: true, size: 56, color: titleColor, font: t.fontFamily }),
       ],
     }),
   ];
@@ -238,7 +243,7 @@ export async function exportToDocx(
         heading: HeadingLevel.HEADING_1,
         spacing: { after: 200 },
         children: [
-          new TextRun({ text: s.title, bold: true, size: 36, color: titleColor, font: t.fontFamily }),
+          new TextRun({ text: s.title, bold: true, size: 40, color: titleColor, font: t.fontFamily }),
         ],
       })
     );
@@ -257,16 +262,12 @@ export async function exportToDocx(
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 200 },
                 children: [
-                  new ImageRun({
-                    type,
-                    data: bin,
-                    transformation: { width: 400, height: 260 },
-                  }) as any,
+                  new ImageRun({ type, data: bin, transformation: { width: 480, height: 300 } }) as any,
                 ],
               })
             );
           }
-        } catch {/* skip image */}
+        } catch { /* skip image */ }
       }
     }
 

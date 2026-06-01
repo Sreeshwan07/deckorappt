@@ -31,7 +31,7 @@ function SlideRendererBase({
   onClick,
   className,
 }: SlideRendererProps) {
-  const t = templates[templateId] || templates.business;
+  const t = templates[templateId] || templates["executive-modern"] || templates.business;
   const isTitleSlide = isTitle || slideIndex === 0;
   const cleanTitle = (slide.title || "")
     .replace(/[\p{Extended_Pictographic}\u2600-\u27BF\u{1F000}-\u{1FFFF}]/gu, "")
@@ -42,13 +42,17 @@ function SlideRendererBase({
   const isCenteredSlide = isTitleSlide || isThankYou;
   const bg = isCenteredSlide ? t.slideAccentBg : t.slideBg;
   const titleClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,100%)]" : t.titleColor;
-  const textClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,90%)]" : t.textColor;
+  const textClr = isCenteredSlide && t.slideAccentBg !== t.slideBg ? "text-[hsl(0,0%,92%)]" : t.textColor;
   const hasImage = !!slide.image_url && !isCenteredSlide;
 
+  // Cap bullets at 6 to prevent overflow; gracefully trims very long content.
+  const cappedContent = (slide.content || []).slice(0, 6);
+
   // Auto-shrink wrapper: scales down font when content would overflow the slide box.
+  // Floor at 0.65 so text stays legible — generation guarantees content fits.
   const { ref: fitRef } = useAutoShrink<HTMLDivElement>(
-    [cleanTitle, slide.content?.join("|"), hasImage, isCenteredSlide],
-    { min: 0.55, max: 1, step: 0.05 }
+    [cleanTitle, cappedContent.join("|"), hasImage, isCenteredSlide],
+    { min: 0.65, max: 1, step: 0.05 }
   );
 
   return (
@@ -67,7 +71,7 @@ function SlideRendererBase({
           className={cn(
             "flex-1 flex w-full h-full overflow-hidden",
             hasImage ? "flex-row" : "flex-col justify-center",
-            isCenteredSlide ? "p-[6%] text-center items-center justify-center flex-col" : "p-[5%]"
+            isCenteredSlide ? "p-[6%] text-center items-center justify-center flex-col" : "px-[6%] py-[5%]"
           )}
         >
           <div className={cn(
@@ -75,16 +79,17 @@ function SlideRendererBase({
             hasImage ? "flex-1 pr-[4%]" : "w-full"
           )}>
             <h2 className={cn(
-              "font-bold leading-[1.15] mb-[0.5em] tracking-tight break-words",
+              "font-bold leading-[1.1] mb-[0.55em] tracking-tight break-words",
               titleClr,
-              isCenteredSlide ? "text-[3.2em]" : "text-[2.4em]"
+              // ≈ 44-56px on a 1080p canvas (fontSize base = 32)
+              isCenteredSlide ? "text-[3.4em]" : "text-[2.6em]"
             )}>
               {cleanTitle}
             </h2>
 
-            {slide.content.length > 0 && (
-              <ul className={cn("space-y-[0.6em] min-h-0", isCenteredSlide && "mt-[0.4em]")}>
-                {slide.content.map((bullet, i) => {
+            {cappedContent.length > 0 && (
+              <ul className={cn("space-y-[0.55em] min-h-0", isCenteredSlide && "mt-[0.4em]")}>
+                {cappedContent.map((bullet, i) => {
                   const isExample = bullet.startsWith("Example:");
                   const isFormula = bullet.startsWith("Formula:") || bullet.startsWith("Equation:");
                   const isDefinition = bullet.startsWith("Definition:");
@@ -93,9 +98,11 @@ function SlideRendererBase({
                     <li key={i} className={cn(
                       "flex items-start gap-[0.6em] font-medium break-words",
                       textClr,
-                      isCenteredSlide ? "text-[1.35em] justify-center leading-relaxed" : "text-[1.2em] leading-[1.5]",
+                      // ≈ 22-26px on a 1080p canvas
+                      isCenteredSlide ? "text-[1.4em] justify-center leading-relaxed"
+                                       : "text-[1.3em] leading-[1.45]",
                       isExample && "italic opacity-90",
-                      isFormula && "font-mono text-center justify-center text-[1.05em]",
+                      isFormula && "font-mono text-center justify-center text-[1.45em]",
                     )}>
                       {!isCenteredSlide && !isFormula && (
                         <span className={cn(
@@ -105,7 +112,7 @@ function SlideRendererBase({
                       )}
                       <span className={cn(
                         "min-w-0",
-                        isFormula && "px-[6%] py-[0.2em] rounded bg-black/5 w-full text-center"
+                        isFormula && "px-[6%] py-[0.35em] rounded bg-black/5 w-full text-center tracking-wide"
                       )}>{bullet}</span>
                     </li>
                   );
