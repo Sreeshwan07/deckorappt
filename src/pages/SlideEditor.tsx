@@ -145,17 +145,31 @@ export default function SlideEditor() {
     if (!slide) return;
     setGeneratingImage(slide.id);
     try {
-      const prompt = `${slide.title}: ${slide.content.slice(0, 2).join(", ")}`;
-      const { data, error } = await supabase.functions.invoke("generate-slide-image", {
-        body: { prompt, slideId: slide.id },
+      // Build a focused stock-photo query from the slide title + first bullet keywords.
+      const query = `${slide.title} ${slide.content.slice(0, 1).join(" ")}`
+        .replace(/[^\w\s]/g, " ")
+        .split(/\s+/)
+        .filter(w => w.length > 3)
+        .slice(0, 4)
+        .join(" ");
+      const { data, error } = await supabase.functions.invoke("fetch-slide-image", {
+        body: { query: query || slide.title, slideId: slide.id },
       });
-      if (error) throw error;
+      if (error) {
+        const ctx: any = (error as any).context;
+        let msg = error.message || "Image fetch failed";
+        try {
+          const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+          if (body?.error) msg = body.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
       if (data?.image_url) {
         setSlides((prev) => prev.map((s, i) => i === idx ? { ...s, image_url: data.image_url } : s));
-        toast({ title: "Image generated!" });
+        toast({ title: "Image added" });
       }
     } catch (err) {
-      toast({ title: "Image generation failed", description: err instanceof Error ? err.message : "Try again", variant: "destructive" });
+      toast({ title: "Image fetch failed", description: err instanceof Error ? err.message : "Try again", variant: "destructive" });
     } finally {
       setGeneratingImage(null);
     }
@@ -390,11 +404,11 @@ export default function SlideEditor() {
                           className="bg-secondary/30"
                         >
                           {generatingImage === slide.id ? (
-                            <><Loader2 className="h-4 w-4 animate-spin" /> Generating image...</>
+                            <><Loader2 className="h-4 w-4 animate-spin" /> Searching image...</>
                           ) : slide.image_url ? (
-                            <><RefreshCw className="h-4 w-4" /> Regenerate Image</>
+                            <><RefreshCw className="h-4 w-4" /> Replace Image</>
                           ) : (
-                            <><ImageIcon className="h-4 w-4" /> Generate Image</>
+                            <><ImageIcon className="h-4 w-4" /> Add Image</>
                           )}
                         </Button>
                         {slide.image_url && (

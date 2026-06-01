@@ -7,258 +7,224 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/* ------------------------------------------------------------------ */
+/* In-memory LRU cache (module scope — survives warm invocations)      */
+/* ------------------------------------------------------------------ */
+const CACHE = new Map<string, { slides: unknown[]; ts: number }>();
+const CACHE_MAX = 50;
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24h
+function cacheGet(k: string) {
+  const v = CACHE.get(k);
+  if (!v) return null;
+  if (Date.now() - v.ts > CACHE_TTL_MS) { CACHE.delete(k); return null; }
+  CACHE.delete(k); CACHE.set(k, v); // refresh recency
+  return v.slides;
+}
+function cacheSet(k: string, slides: unknown[]) {
+  if (CACHE.size >= CACHE_MAX) { const first = CACHE.keys().next().value; if (first) CACHE.delete(first); }
+  CACHE.set(k, { slides, ts: Date.now() });
+}
+
+/* ------------------------------------------------------------------ */
+/* Topic Intelligence                                                  */
+/* ------------------------------------------------------------------ */
+const FORMULA_KEYWORDS = [
+  "fourier","laplace","bayes","newton","scheduling","algorithm","complexity",
+  "derivation","integration","differentiation","matrix","probability","statistics",
+  "regression","gradient","neural","theorem","equation","formula","physics","calculus",
+  "thermodynamics","kinematics","circuit","ohm","kirchhoff","binary","encoding"
+];
+const ENGINEERING_KW = ["dbms","operating system","networks","compiler","architecture","ml","machine learning","ai","data structure","algorithm","cloud","devops","kernel","cpu","memory","tcp","ip","kubernetes","docker","react","javascript","python","java"];
+const MATH_KW = ["math","calculus","algebra","geometry","trigonometry","probability","statistics","linear algebra","derivative","integral","matrix","vector"];
+const SCIENCE_KW = ["physics","chemistry","biology","cell","atom","molecule","photosynthesis","ecosystem","mechanics","optics","wave","gravity"];
+const HISTORY_KW = ["history","war","revolution","empire","civilization","ancient","medieval","independence","movement","timeline","dynasty"];
+const BUSINESS_KW = ["business","marketing","management","strategy","finance","economy","startup","pitch","brand","sales","investor","leadership","mba"];
+
+type TopicType = "engineering" | "math" | "science" | "history" | "business" | "general";
+
+function classifyTopic(topic: string): { type: TopicType; hasFormula: boolean } {
+  const t = topic.toLowerCase();
+  const hasFormula = FORMULA_KEYWORDS.some(k => t.includes(k));
+  if (ENGINEERING_KW.some(k => t.includes(k))) return { type: "engineering", hasFormula };
+  if (MATH_KW.some(k => t.includes(k))) return { type: "math", hasFormula: true };
+  if (SCIENCE_KW.some(k => t.includes(k))) return { type: "science", hasFormula };
+  if (HISTORY_KW.some(k => t.includes(k))) return { type: "history", hasFormula: false };
+  if (BUSINESS_KW.some(k => t.includes(k))) return { type: "business", hasFormula: false };
+  return { type: "general", hasFormula };
+}
+
+/* The full Professional ordering. Trim to slideCount intelligently. */
+function buildSlidePlan(slideCount: number, info: { type: TopicType; hasFormula: boolean }): string[] {
+  // Each entry maps to a layout slot: title/agenda/intro/content/formula/pros_cons/comparison/summary/thanks
+  const full: { slot: string; section: string; required?: boolean }[] = [
+    { slot: "title",      section: "Title",                          required: true },
+    { slot: "intro",      section: "Agenda / Overview",              required: true },
+    { slot: "intro",      section: "Introduction & Definition",      required: true },
+    { slot: "content",    section: "Core Concepts" },
+    { slot: "content",    section: "Key Components" },
+    { slot: "content",    section: "Working / Architecture" },
+    { slot: "content",    section: "Examples" },
+    { slot: "pros_cons",  section: "Advantages & Disadvantages" },
+    { slot: "comparison", section: "Comparison" },
+    { slot: "content",    section: "Applications / Use Cases" },
+    { slot: "formula",    section: "Important Formulas" },
+    { slot: "content",    section: "Case Study" },
+    { slot: "summary",    section: "Summary",                        required: true },
+    { slot: "thanks",     section: "Thank You",                      required: true },
+  ];
+  // Topic-aware filtering
+  if (info.type === "history") {
+    full.splice(full.findIndex(x => x.section === "Important Formulas"), 1);
+  }
+  if (info.type === "business") {
+    const i = full.findIndex(x => x.section === "Important Formulas");
+    if (i >= 0) full.splice(i, 1);
+  }
+  if (!info.hasFormula) {
+    const i = full.findIndex(x => x.slot === "formula");
+    if (i >= 0) full.splice(i, 1);
+  }
+  // Now trim/expand to exact slideCount
+  const required = full.filter(x => x.required);
+  const optional = full.filter(x => !x.required);
+  const need = slideCount - required.length;
+  const picked = optional.slice(0, Math.max(0, need));
+  // Re-assemble respecting original order
+  const keepSet = new Set([...required, ...picked]);
+  const planned = full.filter(x => keepSet.has(x)).map(x => `${x.slot}::${x.section}`);
+  // If still short (deck > full list), pad with extra content slides
+  while (planned.length < slideCount) {
+    planned.splice(planned.length - 2, 0, `content::Deeper Dive ${planned.length}`);
+  }
+  return planned.slice(0, slideCount);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Require an authenticated user — prevents anonymous credit drain.
+    // ── Auth ───────────────────────────────────────────────────────
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
-    if (!token) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!token) return json({ error: "Unauthorized" }, 401);
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: `Bearer ${token}` } } },
     );
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-    if (userErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
 
+    // ── Input ──────────────────────────────────────────────────────
     const { topic, numSlides, tone, template } = await req.json();
-
-    if (!topic || typeof topic !== "string" || topic.length > 500) {
-      return new Response(JSON.stringify({ error: "Invalid topic" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    if (!topic || typeof topic !== "string" || topic.length > 500)
+      return json({ error: "Invalid topic" }, 400);
     const slideCount = Math.min(Math.max(numSlides || 8, 5), 20);
+    const modeKey = (tone || "professional").toLowerCase();
+
+    // ── Cache lookup ───────────────────────────────────────────────
+    const cacheKey = `${modeKey}|${slideCount}|${topic.trim().toLowerCase()}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return json({ slides: cached, cached: true });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const modeKey = (tone || "professional").toLowerCase();
-    const modeBlock =
-      modeKey === "educational"
-        ? `MODE: EDUCATIONAL
-- Audience: students (school → B.Tech). Goal: deep understanding.
-- Content is DETAILED and INFORMATIVE. Use formal definitions, step-by-step explanations, worked examples, formulas, and clear comparisons.
-- Bullets 16–22 words. Up to 4 bullets per content slide. Intro paragraph up to 35 words.
-- Prefer "formula", "comparison", and "pros_cons" layouts whenever the topic supports them.
-- Image prompts MUST be educational diagrams (labeled schematics, charts, architecture diagrams) — never decorative photos.`
-        : modeKey === "creative"
-        ? `MODE: CREATIVE
-- Audience: creative / Gen-Z / storytelling decks. Goal: visual impact.
-- Content is SHORT and PUNCHY. 2–3 bullets per slide, 8–14 words each. Intro paragraph ≤ 22 words.
-- Use evocative, narrative phrasing. Avoid heavy jargon. Favor "intro", "content", and "summary" layouts; minimize formula/comparison unless essential.
-- Image prompts MUST be aesthetic, editorial, modern visuals related to the topic — clean photography, abstract gradients, or stylized illustrations.`
-        : `MODE: PROFESSIONAL
-- Audience: corporate / startup / investor decks. Goal: clarity and impact.
-- Content is CONCISE and EXECUTIVE. 3 bullets per slide, 10–16 words each. Intro paragraph ≤ 28 words.
-- Use business terminology, KPIs, frameworks, and outcomes. Prefer "intro", "content", "comparison", and "summary".
-- Image prompts MUST be professional business visuals: clean infographics, data charts, modern office or product imagery related to the topic.`;
+    // ── Topic classification & plan ────────────────────────────────
+    const info = classifyTopic(topic);
+    const plan = buildSlidePlan(slideCount, info);
+    const planList = plan.map((p, i) => `  ${i + 1}. [${p.split("::")[0]}] ${p.split("::")[1]}`).join("\n");
 
-    const systemPrompt = `You are a senior presentation designer creating ready-to-present decks.
+    const modeBlock =
+      modeKey === "educational" ? "MODE: EDUCATIONAL — students (school → B.Tech). Detailed, definitions, derivations, worked examples. 3-4 bullets/slide, 14-22 words each."
+      : modeKey === "creative"  ? "MODE: CREATIVE — storytelling deck. Punchy, evocative. 2-3 bullets/slide, 8-14 words each."
+      :                            "MODE: PROFESSIONAL — corporate/investor deck. Executive, KPIs, frameworks. 3-4 bullets/slide, 10-18 words each.";
+
+    const systemPrompt = `You are a senior presentation engine. You output strictly structured JSON for ${slideCount} slides.
 
 ${modeBlock}
 
-Generate exactly ${slideCount} slides about the given topic.
+TOPIC TYPE detected: ${info.type.toUpperCase()}${info.hasFormula ? " (formula-bearing)" : ""}
 
-==============================
-EDUCATION-LEVEL & SUBJECT DETECTION
-==============================
-Silently detect both the EDUCATION LEVEL and the SUBJECT TYPE of the topic, then adapt language and depth:
+SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE content. Do not deviate from order or count.
+${planList}
 
-Education levels:
-- Class 1–5 (Primary)        → very simple words, short sentences, lots of relatable examples, no jargon.
-- Class 6–10 (Middle/High)   → clear definitions, simple diagrams (described), school-textbook tone.
-- Class 11–12 / Intermediate → exam-oriented, key points, formulas, NCERT-style structure.
-- Diploma / B.Tech / Degree  → formal academic, precise terminology, derivations, complexity, examples.
-- MBA / Corporate            → frameworks, case studies, business impact, KPIs.
-- Competitive exams / GK     → fact-dense, definitions, dates, summary tables.
+LAYOUT SCHEMA per slot:
+- title       → { layout:"title", title, subtitle }
+- intro       → { layout:"intro", title, paragraph (28-40 words, definition + context) }
+- content     → { layout:"content", title, bullets[3-5] (each 12-22 words, substantive) }
+- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ≤14 words) }
+- comparison  → { layout:"comparison", title, left{title,points[3-4]}, right{title,points[3-4]} }
+- formula     → { layout:"formula", title, formula (clean ASCII like "y = mx + c" or "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ≤30 words) }
+- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤14 words, impactful takeaways) }
+- thanks      → { layout:"thanks", title:"Thank You", subtitle:"Questions?" }
 
-Subject-aware coverage:
-- DBMS / OS / COA / Networks / Compilers → definitions, architecture (described), working, types, advantages, disadvantages, real example.
-- Data Structures / Algorithms → definition, operations, time/space complexity, pseudocode/steps, example, applications.
-- Machine Learning / AI → problem definition, intuition, math/formula, algorithm steps, pros/cons, use-cases.
-- Mathematics / Physics / Chemistry → formal definition, derivation/formula with variables and units, worked numerical, applications.
-- Biology → definition, structure (described), function, classification, diagram-style explanation, examples.
-- History / Geography / Civics → background, key events/concepts, timeline, causes/effects, significance.
-- Economics / Accounting / Business Studies → concept, formula/principle, example, advantages/limitations, real-world case.
-- General theory / GK → concept, key principles, examples, comparisons, conclusion.
+ABSOLUTE RULES (failures = bad slide):
+1. NEVER produce a slide that contains only the title or only the topic name. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
+2. NO emojis, NO decorative symbols (★ ✨ 🚀 → • ◆), NO markdown (** __ ##), NO trailing punctuation in titles.
+3. Bullets are SINGLE-SENTENCE, ≤22 words, ZERO filler. Concrete > vague.
+4. Titles ≤8 words, Title Case.
+5. For formula slot: write the formula as a clean string (use unicode subscripts/superscripts where natural). Provide 3-5 variable definitions with units. Provide a numerical worked example.
+6. For pros_cons / comparison: provide BOTH sides with 3-4 substantive points each.
+7. Cover the topic's STANDARD academic syllabus thoroughly across the chosen sections.
+8. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic (e.g. "database server", "neural network diagram", "indian independence"). Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
 
-The slide deck MUST cover the topic's standard syllabus completely and in logical academic order
-(introduction → fundamentals → working/structure → variants/comparisons → advantages/limitations → applications → summary).
+Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } with layouts matching the plan order above.`;
 
-==============================
-LAYOUT-AWARE SLIDE SYSTEM
-==============================
-Each slide MUST have a "layout" field. Pick the BEST layout for the content:
-
-- "title"       → Slide 1 only. Big topic + short subtitle.
-- "intro"       → Two-column intro/definition. Heading + 2-3 sentence paragraph.
-- "content"     → Standard explanation slide. Heading + 3-5 substantive bullets.
-- "pros_cons"   → Advantages vs disadvantages. Provide pros[] and cons[] (3-4 each).
-- "comparison"  → Side-by-side comparison of two things. Provide left{title, points[]} and right{title, points[]}.
-- "formula"     → Formula-centric. Provide formula (string), variables[] (e.g. "F = force in Newtons"), example (worked example string).
-- "summary"     → Key takeaways. 3-5 short impactful points.
-- "thanks"      → Final slide ONLY. Title "Thank You", subtitle "Questions?".
-
-==============================
-STRUCTURE (exactly ${slideCount} slides)
-==============================
-- Slide 1: layout="title"
-- Slide 2: layout="intro" (definition + overview)
-- Slides 3 to ${slideCount - 2}: choose from "content", "pros_cons", "comparison", "formula" based on what the sub-topic needs. Mix layouts intelligently — do NOT use "content" for everything.
-- Slide ${slideCount - 1}: layout="summary"
-- Slide ${slideCount}: layout="thanks"
-
-==============================
-CONTENT QUALITY RULES (STRICT — PREVENTS OVERFLOW)
-==============================
-- Academic, precise, B.Tech standard. No filler, no repetition, no shallow one-liners.
-- Bullets MUST be 14-22 words each. NEVER exceed 22 words. NEVER write multi-sentence bullets.
-- Provide AT MOST 4 bullets per content slide (3 is ideal). Quality over quantity.
-- Intro paragraph: AT MOST 35 words (2 short sentences).
-- Use formal definitions and proper terminology. Prefer concrete examples over vague statements.
-- For technical topics: include at least ONE "formula" slide whenever any equation, complexity, or quantitative relation applies.
-- For evaluative topics or any topic with trade-offs: include a "pros_cons" slide (3-4 pros, 3-4 cons, each ≤ 14 words).
-- For "X vs Y", variants, or alternatives: include a "comparison" slide (3-4 points per side, ≤ 12 words each).
-- For formula slides: 3-5 variables max, example ≤ 25 words.
-- Summary: 3-5 short impactful points (≤ 12 words each).
-- Cover the FULL standard syllabus of the detected subject — split across MORE slides instead of cramming.
-- If a sub-topic is too large for one slide, SPLIT it into two slides (e.g. "Working of X — Part 1" / "Part 2"). Never overflow a single slide.
-
-==============================
-HEADING RULES (STRICT)
-==============================
-- Titles MUST be clean, professional, academic style.
-- NO emojis, NO decorative symbols (★ ✨ 🚀 → • etc.), NO markdown (** __ ##), NO trailing punctuation.
-- Title case, max 8 words. Example: "Advantages of DBMS" — NOT "✨ Advantages of DBMS 🚀".
-
-==============================
-IMAGE RULES (STRICT — TOPIC-RELEVANT ONLY)
-==============================
-- Every "intro" and "content" slide must include an image_prompt that is DIRECTLY related to the slide's specific sub-topic and the overall presentation topic.
-- The image_prompt must describe a professional, photorealistic or clean-illustration visual SPECIFIC to the subject domain. Examples:
-  · DBMS slide → "clean diagram of relational database tables with primary/foreign keys, modern flat illustration"
-  · Operating Systems → "schematic of OS kernel layers with process and memory management blocks"
-  · Machine Learning → "neural network graph with labeled input, hidden, and output layers"
-  · Networking → "network topology diagram with routers, switches and client devices"
-- NEVER use generic stock-photo prompts ("business meeting", "people working", "abstract background"). NEVER use cartoonish or decorative imagery unrelated to the topic.
-- For pros_cons / comparison / formula / summary / title / thanks slides → omit image_prompt (set to empty/null).
-
-==============================
-OUTPUT SCHEMA (per slide)
-==============================
-{
-  "layout": "title" | "intro" | "content" | "pros_cons" | "comparison" | "formula" | "summary" | "thanks",
-  "title": string,
-  "subtitle": string (optional, for title/intro/thanks),
-  "paragraph": string (optional, for intro — the explanation paragraph),
-  "bullets": string[] (for content/summary; 3-5 items),
-  "pros": string[] (for pros_cons),
-  "cons": string[] (for pros_cons),
-  "left":  { "title": string, "points": string[] } (for comparison),
-  "right": { "title": string, "points": string[] } (for comparison),
-  "formula": string (for formula),
-  "variables": string[] (for formula — "Symbol = meaning + unit"),
-  "example": string (for formula — worked example),
-  "notes": string (speaker notes, 2-3 sentences),
-  "image_prompt": string (visual description; required for intro/content)
-}
-
-Return ONLY valid JSON with a "slides" array.`;
-
+    // ── AI call ────────────────────────────────────────────────────
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a detailed academic presentation about: ${topic}` },
+          { role: "user", content: `Create the deck. Topic: ${topic}` },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_slides",
-              description: "Generate structured academic presentation slides with layout types",
-              parameters: {
-                type: "object",
-                properties: {
-                  slides: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        layout: {
-                          type: "string",
-                          enum: ["title", "intro", "content", "pros_cons", "comparison", "formula", "summary", "thanks"],
-                        },
-                        title: { type: "string" },
-                        subtitle: { type: "string" },
-                        paragraph: { type: "string" },
-                        bullets: { type: "array", items: { type: "string" } },
-                        pros: { type: "array", items: { type: "string" } },
-                        cons: { type: "array", items: { type: "string" } },
-                        left: {
-                          type: "object",
-                          properties: {
-                            title: { type: "string" },
-                            points: { type: "array", items: { type: "string" } },
-                          },
-                        },
-                        right: {
-                          type: "object",
-                          properties: {
-                            title: { type: "string" },
-                            points: { type: "array", items: { type: "string" } },
-                          },
-                        },
-                        formula: { type: "string" },
-                        variables: { type: "array", items: { type: "string" } },
-                        example: { type: "string" },
-                        notes: { type: "string" },
-                        image_prompt: { type: "string" },
-                      },
-                      required: ["layout", "title"],
+        tools: [{
+          type: "function",
+          function: {
+            name: "generate_slides",
+            description: "Generate structured slides matching the plan order exactly.",
+            parameters: {
+              type: "object",
+              properties: {
+                slides: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      layout: { type: "string", enum: ["title","intro","content","pros_cons","comparison","formula","summary","thanks"] },
+                      title: { type: "string" },
+                      subtitle: { type: "string" },
+                      paragraph: { type: "string" },
+                      bullets: { type: "array", items: { type: "string" } },
+                      pros: { type: "array", items: { type: "string" } },
+                      cons: { type: "array", items: { type: "string" } },
+                      left:  { type: "object", properties: { title: { type: "string" }, points: { type: "array", items: { type: "string" } } } },
+                      right: { type: "object", properties: { title: { type: "string" }, points: { type: "array", items: { type: "string" } } } },
+                      formula: { type: "string" },
+                      variables: { type: "array", items: { type: "string" } },
+                      example: { type: "string" },
+                      notes: { type: "string" },
+                      image_query: { type: "string" },
                     },
+                    required: ["layout","title"],
                   },
                 },
-                required: ["slides"],
               },
+              required: ["slides"],
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "generate_slides" } },
       }),
     });
 
     if (!response.ok) {
       const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again in a moment." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (status === 429) return json({ error: "Rate limited. Please try again in a moment." }, 429);
+      if (status === 402) return json({ error: "AI credits exhausted. Please add funds." }, 402);
       const text = await response.text();
       console.error("AI error:", status, text);
       throw new Error("AI generation failed");
@@ -266,20 +232,16 @@ Return ONLY valid JSON with a "slides" array.`;
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-
-    let rawSlides: any[];
+    let rawSlides: any[] = [];
     if (toolCall?.function?.arguments) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      rawSlides = parsed.slides;
+      rawSlides = JSON.parse(toolCall.function.arguments).slides || [];
     } else {
       const content = aiResult.choices?.[0]?.message?.content || "";
       const cleaned = content.replace(/```json\n?/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      rawSlides = parsed.slides;
+      rawSlides = (JSON.parse(cleaned).slides) || [];
     }
 
-    // Normalize to a stable shape: keep `bullets` for backward-compat (array of content strings)
-    // but also pass the structured `layout` payload through.
+    // ── Validation & normalization ─────────────────────────────────
     const cleanHeading = (str: string) =>
       (str || "")
         .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
@@ -288,12 +250,44 @@ Return ONLY valid JSON with a "slides" array.`;
         .replace(/\s{2,}/g, " ")
         .trim();
 
-    const slides = rawSlides.map((s: any) => {
+    const isMeaningful = (s: any): boolean => {
+      if (s.layout === "title" || s.layout === "thanks") return true;
+      if (s.layout === "intro") return !!(s.paragraph && s.paragraph.trim().split(/\s+/).length >= 10);
+      if (s.layout === "formula") return !!(s.formula && (s.variables?.length || s.example));
+      if (s.layout === "pros_cons") return (s.pros?.length || 0) >= 2 && (s.cons?.length || 0) >= 2;
+      if (s.layout === "comparison") return (s.left?.points?.length || 0) >= 2 && (s.right?.points?.length || 0) >= 2;
+      return (s.bullets?.filter((b: string) => b && b.trim().length > 8).length || 0) >= 2;
+    };
+
+    // Drop empty/weak slides; ensure title & thanks framing
+    let cleaned = rawSlides.filter(isMeaningful);
+
+    // Dedupe by title (Jaccard-ish: same lowercase normalized)
+    const seen = new Set<string>();
+    cleaned = cleaned.filter(s => {
+      const key = cleanHeading(s.title).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Force first=title, last=thanks
+    if (!cleaned[0] || cleaned[0].layout !== "title") {
+      cleaned.unshift({ layout: "title", title: cleanHeading(topic), subtitle: "A Presentation" });
+    }
+    if (cleaned[cleaned.length - 1]?.layout !== "thanks") {
+      cleaned.push({ layout: "thanks", title: "Thank You", subtitle: "Questions?" });
+    }
+
+    // Flatten for backward compat with renderer/exporter consumers
+    const slides = cleaned.map((s: any) => {
       const flat: string[] = [];
       if (s.paragraph) flat.push(s.paragraph);
       if (Array.isArray(s.bullets)) flat.push(...s.bullets);
       if (Array.isArray(s.pros)) flat.push(...s.pros.map((p: string) => `✓ ${p}`));
       if (Array.isArray(s.cons)) flat.push(...s.cons.map((c: string) => `✗ ${c}`));
+      if (s.left?.points) flat.push(`${s.left.title || "Left"}:`, ...s.left.points.map((p: string) => `• ${p}`));
+      if (s.right?.points) flat.push(`${s.right.title || "Right"}:`, ...s.right.points.map((p: string) => `• ${p}`));
       if (s.formula) flat.push(`Formula: ${s.formula}`);
       if (Array.isArray(s.variables)) flat.push(...s.variables);
       if (s.example) flat.push(`Example: ${s.example}`);
@@ -313,20 +307,19 @@ Return ONLY valid JSON with a "slides" array.`;
         variables: Array.isArray(s.variables) ? s.variables : [],
         example: s.example ?? null,
         notes: s.notes ?? null,
-        image_prompt: s.image_prompt ?? null,
-        // backward-compat for existing renderer/exporter consumers:
+        image_query: s.image_query ?? null,
         content: flat,
       };
     });
 
-    return new Response(JSON.stringify({ slides }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    cacheSet(cacheKey, slides);
+    return json({ slides });
   } catch (e) {
     console.error("generate-slides error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}

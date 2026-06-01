@@ -19,6 +19,7 @@ interface SlideshowModeProps {
   onExit: () => void;
 }
 
+// Base canvas — true 16:9. Scales to fit any viewport without overflow.
 const BASE_W = 1920;
 const BASE_H = 1080;
 
@@ -49,7 +50,7 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
   const { containerRef, scale } = useFitScale(BASE_W, BASE_H);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden">
       <div ref={containerRef} className="relative w-full h-full overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
@@ -57,13 +58,11 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="absolute"
+            transition={{ duration: 0.22 }}
+            className="absolute left-1/2 top-1/2"
             style={{
               width: BASE_W,
               height: BASE_H,
-              left: "50%",
-              top: "50%",
               marginLeft: -BASE_W / 2,
               marginTop: -BASE_H / 2,
               transform: `scale(${scale})`,
@@ -83,29 +82,19 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-4 opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/60 to-transparent">
-        <button
-          onClick={goPrev}
-          disabled={currentSlide === 0}
-          className="p-2 rounded-full bg-white/10 backdrop-blur text-white disabled:opacity-30 hover:bg-white/20 transition-colors"
-        >
+        <button onClick={goPrev} disabled={currentSlide === 0}
+          className="p-2 rounded-full bg-white/10 backdrop-blur text-white disabled:opacity-30 hover:bg-white/20 transition-colors">
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <span className="text-white/60 text-sm font-medium">
-          {currentSlide + 1} / {slides.length}
-        </span>
-        <button
-          onClick={goNext}
-          disabled={currentSlide === slides.length - 1}
-          className="p-2 rounded-full bg-white/10 backdrop-blur text-white disabled:opacity-30 hover:bg-white/20 transition-colors"
-        >
+        <span className="text-white/60 text-sm font-medium">{currentSlide + 1} / {slides.length}</span>
+        <button onClick={goNext} disabled={currentSlide === slides.length - 1}
+          className="p-2 rounded-full bg-white/10 backdrop-blur text-white disabled:opacity-30 hover:bg-white/20 transition-colors">
           <ChevronRight className="h-6 w-6" />
         </button>
       </div>
 
-      <button
-        onClick={onExit}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 transition-colors"
-      >
+      <button onClick={onExit}
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 transition-colors">
         <X className="h-5 w-5" />
       </button>
     </div>
