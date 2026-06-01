@@ -404,11 +404,11 @@ export default function SlideEditor() {
                           className="bg-secondary/30"
                         >
                           {generatingImage === slide.id ? (
-                            <><Loader2 className="h-4 w-4 animate-spin" /> Generating image...</>
+                            <><Loader2 className="h-4 w-4 animate-spin" /> Searching image...</>
                           ) : slide.image_url ? (
-                            <><RefreshCw className="h-4 w-4" /> Regenerate Image</>
+                            <><RefreshCw className="h-4 w-4" /> Replace Image</>
                           ) : (
-                            <><ImageIcon className="h-4 w-4" /> Generate Image</>
+                            <><ImageIcon className="h-4 w-4" /> Add Image</>
                           )}
                         </Button>
                         {slide.image_url && (
