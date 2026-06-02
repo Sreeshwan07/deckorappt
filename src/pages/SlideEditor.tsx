@@ -269,7 +269,8 @@ export default function SlideEditor() {
           <div className="relative">
             <Button variant="gradient" size="sm" onClick={() => setShowExportMenu((v) => !v)} disabled={exporting} className="glow-purple-sm">
               {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {isAdmin ? "Export Free" : "Export"}
+              Export
+
             </Button>
             {showExportMenu && (
               <>
