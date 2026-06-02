@@ -140,36 +140,44 @@ serve(async (req) => {
       : modeKey === "creative"  ? "MODE: CREATIVE — storytelling deck. Punchy, evocative. 2-3 bullets/slide, 8-14 words each."
       :                            "MODE: PROFESSIONAL — corporate/investor deck. Executive, KPIs, frameworks. 3-4 bullets/slide, 10-18 words each.";
 
-    const systemPrompt = `You are a senior presentation engine. You output strictly structured JSON for ${slideCount} slides.
+    const systemPrompt = `You are a senior subject-matter presentation engine. Output strictly structured JSON for ${slideCount} slides on the EXACT user topic.
 
 ${modeBlock}
 
 TOPIC TYPE detected: ${info.type.toUpperCase()}${info.hasFormula ? " (formula-bearing)" : ""}
 
+CONTENT ACCURACY (highest priority):
+- The deck MUST be specifically about the user's exact topic — not a generic adjacent topic.
+- Use real, accurate, technically-correct facts. NO filler, NO generic "importance/benefits of X" fluff.
+- Match the topic's standard academic/professional depth (B.Tech / industry level by default).
+- Include concrete examples, numbers, named systems/people, and where relevant: formulas, comparisons, advantages, disadvantages, and applications.
+- If the topic implies a syllabus (e.g. "DBMS Normalization", "Fourier Transform"), cover its standard sub-topics in correct order.
+
 SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE content. Do not deviate from order or count.
 ${planList}
 
 LAYOUT SCHEMA per slot:
-- title       → { layout:"title", title, subtitle }
-- intro       → { layout:"intro", title, paragraph (28-40 words, definition + context) }
-- content     → { layout:"content", title, bullets[3-5] (each 12-22 words, substantive) }
-- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ≤14 words) }
+- title       → { layout:"title", title (the exact topic), subtitle (one-line value prop) }
+- intro       → { layout:"intro", title, paragraph (32-50 words: formal definition + context + why it matters) }
+- content     → { layout:"content", title, bullets[3-5] (each 12-22 words, technically specific, no fluff) }
+- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ≤16 words, concrete) }
 - comparison  → { layout:"comparison", title, left{title,points[3-4]}, right{title,points[3-4]} }
-- formula     → { layout:"formula", title, formula (clean ASCII like "y = mx + c" or "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ≤30 words) }
-- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤14 words, impactful takeaways) }
+- formula     → { layout:"formula", title, formula (clean ASCII/unicode: "y = mx + c", "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ≤40 words) }
+- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤16 words, impactful, topic-specific takeaways) }
 - thanks      → { layout:"thanks", title:"Thank You", subtitle:"Questions?" }
 
 ABSOLUTE RULES (failures = bad slide):
-1. NEVER produce a slide that contains only the title or only the topic name. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
+1. NEVER produce a slide that contains only the title. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
 2. NO emojis, NO decorative symbols (★ ✨ 🚀 → • ◆), NO markdown (** __ ##), NO trailing punctuation in titles.
 3. Bullets are SINGLE-SENTENCE, ≤22 words, ZERO filler. Concrete > vague.
-4. Titles ≤8 words, Title Case.
-5. For formula slot: write the formula as a clean string (use unicode subscripts/superscripts where natural). Provide 3-5 variable definitions with units. Provide a numerical worked example.
-6. For pros_cons / comparison: provide BOTH sides with 3-4 substantive points each.
-7. Cover the topic's STANDARD academic syllabus thoroughly across the chosen sections.
-8. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic (e.g. "database server", "neural network diagram", "indian independence"). Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
+4. Titles ≤8 words, Title Case, directly about the topic sub-section.
+5. For formula slot: write the formula as a clean string. Provide 3-5 variable definitions with units. Provide a numerical worked example with real numbers.
+6. For pros_cons / comparison: BOTH sides with 3-4 substantive, topic-specific points each.
+7. No duplicate bullets across slides. No repeated information.
+8. image_query: 1-3 stock-photo keywords directly tied to the slide sub-topic. Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
 
-Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } with layouts matching the plan order above.`;
+Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } matching plan order above.`;
+
 
     // ── AI call ────────────────────────────────────────────────────
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
