@@ -187,7 +187,8 @@ Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } matching plan 
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create the deck. Topic: ${topic}` },
+          { role: "user", content: `Create the deck on this EXACT topic: "${topic}".\nStay strictly on this topic. Use accurate, technically-correct, B.Tech-level facts unless the topic clearly implies otherwise. No filler. No generic content.` },
+
         ],
         tools: [{
           type: "function",
