@@ -100,7 +100,9 @@ export async function exportToPptx(
     });
 
     // Body bullets — cap to 6, auto-shrink past 4
-    const body = (slide.content || []).slice(0, 6);
+    const body = (slide.content || [])
+      .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+      .slice(0, 6);
     if (body.length > 0) {
       const sizeForCount = body.length <= 3 ? 24 : body.length <= 4 ? 22 : body.length <= 5 ? 20 : 18;
       const bulletText = body.map((b) => {
@@ -115,9 +117,9 @@ export async function exportToPptx(
             italic: isExample,
             bold: isFormula,
             fontFace: isFormula ? "Consolas" : t.fontFamily,
-            bullet: isCenteredSlide || isParagraph || isFormula
+            bullet: (isCenteredSlide || isParagraph || isFormula)
               ? false
-              : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
+              : { code: "25CF" },
             paraSpaceBefore: 6,
             paraSpaceAfter: 6,
             align: (isCenteredSlide || isFormula ? "center" : "left") as "center" | "left",
@@ -133,6 +135,7 @@ export async function exportToPptx(
         valign: "top",
       });
     }
+
 
     if (hasImage && slide.image_url) {
       const data = await urlToBase64(slide.image_url);
