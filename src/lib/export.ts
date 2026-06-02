@@ -75,12 +75,13 @@ export async function exportToPptx(
     pptSlide.background = { color: t.exportBg.replace("#", "") };
 
     if (!isCenteredSlide) {
-      pptSlide.addShape(pptxgenjs.ShapeType.rect, {
+      pptSlide.addShape("rect" as any, {
         x: 0, y: 0, w: "100%", h: 0.07,
         fill: { color: t.exportAccentColor.replace("#", "") },
         line: { color: t.exportAccentColor.replace("#", ""), width: 0 },
       });
     }
+
 
     const textWidth = hasImage ? 7.3 : (isCenteredSlide ? 11.33 : 11.73);
 
