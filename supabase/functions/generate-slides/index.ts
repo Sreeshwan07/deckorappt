@@ -135,10 +135,28 @@ serve(async (req) => {
     const plan = buildSlidePlan(slideCount, info);
     const planList = plan.map((p, i) => `  ${i + 1}. [${p.split("::")[0]}] ${p.split("::")[1]}`).join("\n");
 
-    const modeBlock =
-      modeKey === "educational" ? "MODE: EDUCATIONAL — students (school → B.Tech). Detailed, definitions, derivations, worked examples. 3-4 bullets/slide, 14-22 words each."
-      : modeKey === "creative"  ? "MODE: CREATIVE — storytelling deck. Punchy, evocative. 2-3 bullets/slide, 8-14 words each."
-      :                            "MODE: PROFESSIONAL — corporate/investor deck. Executive, KPIs, frameworks. 3-4 bullets/slide, 10-18 words each.";
+    const isEducational = modeKey === "educational";
+
+    const modeBlock = isEducational
+      ? `MODE: EDUCATIONAL — comprehensive academic deck for students (school → B.Tech).
+   • Aim for DEPTH and clarity, not brevity. Each slide must teach something concrete.
+   • Body bullets: 4–6 per content slide, each 18–32 words. Use full sentences, not fragments.
+   • Always include a formal Definition where applicable (prefix the bullet with "Definition: ").
+   • Use precise academic terminology. Briefly explain jargon the first time it appears.
+   • Provide worked examples, real-world applications, and at least one numerical/illustrative example where the topic allows.
+   • Prefix illustrative examples with "Example: " and formulas with "Formula: ".`
+      : modeKey === "creative"
+        ? "MODE: CREATIVE — storytelling deck. Punchy, evocative. 2-3 bullets/slide, 8-14 words each."
+        : "MODE: PROFESSIONAL — corporate/investor deck. Executive, KPIs, frameworks. 3-4 bullets/slide, 10-18 words each.";
+
+    const educationalRules = isEducational ? `
+EDUCATIONAL MODE — ADDITIONAL REQUIREMENTS:
+• The first content slide after the Agenda MUST start with a formal "Definition: ..." bullet.
+• Dedicate slides to: Definition, Key Concepts, Working/Process, Examples, Advantages, Disadvantages, Applications, and (where relevant) Formulas.
+• Expand important sub-topics into their OWN slides rather than cramming. Better to have 5 deep slides than 8 thin ones.
+• Where a formula exists, ALSO include a "variables" list (Symbol = meaning + unit) AND a worked numerical example.
+• Avoid one-liner generic bullets ("It is important", "Used widely"). Every bullet must convey a fact, mechanism, value, comparison, or example.
+` : "";
 
     const systemPrompt = `You are a senior presentation engine. You output strictly structured JSON for ${slideCount} slides.
 
@@ -148,26 +166,26 @@ TOPIC TYPE detected: ${info.type.toUpperCase()}${info.hasFormula ? " (formula-be
 
 SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE content. Do not deviate from order or count.
 ${planList}
-
+${educationalRules}
 LAYOUT SCHEMA per slot:
 - title       → { layout:"title", title, subtitle }
-- intro       → { layout:"intro", title, paragraph (28-40 words, definition + context) }
-- content     → { layout:"content", title, bullets[3-5] (each 12-22 words, substantive) }
-- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ≤14 words) }
+- intro       → { layout:"intro", title, paragraph (${isEducational ? "50-80" : "28-40"} words, definition + context) }
+- content     → { layout:"content", title, bullets[${isEducational ? "4-6" : "3-5"}] (each ${isEducational ? "18-32" : "12-22"} words, substantive) }
+- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ${isEducational ? "≤22" : "≤14"} words) }
 - comparison  → { layout:"comparison", title, left{title,points[3-4]}, right{title,points[3-4]} }
-- formula     → { layout:"formula", title, formula (clean ASCII like "y = mx + c" or "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ≤30 words) }
-- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤14 words, impactful takeaways) }
+- formula     → { layout:"formula", title, formula (clean ASCII like "y = mx + c" or "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ${isEducational ? "≤45" : "≤30"} words) }
+- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤${isEducational ? "20" : "14"} words, impactful takeaways) }
 - thanks      → { layout:"thanks", title:"Thank You", subtitle:"Questions?" }
 
 ABSOLUTE RULES (failures = bad slide):
 1. NEVER produce a slide that contains only the title or only the topic name. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
 2. NO emojis, NO decorative symbols (★ ✨ 🚀 → • ◆), NO markdown (** __ ##), NO trailing punctuation in titles.
-3. Bullets are SINGLE-SENTENCE, ≤22 words, ZERO filler. Concrete > vague.
+3. Bullets are SINGLE-SENTENCE, ZERO filler. Concrete > vague.
 4. Titles ≤8 words, Title Case.
 5. For formula slot: write the formula as a clean string (use unicode subscripts/superscripts where natural). Provide 3-5 variable definitions with units. Provide a numerical worked example.
 6. For pros_cons / comparison: provide BOTH sides with 3-4 substantive points each.
 7. Cover the topic's STANDARD academic syllabus thoroughly across the chosen sections.
-8. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic (e.g. "database server", "neural network diagram", "indian independence"). Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
+8. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic. Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
 
 Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } with layouts matching the plan order above.`;
 

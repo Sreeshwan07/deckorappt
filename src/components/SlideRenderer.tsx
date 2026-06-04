@@ -46,13 +46,13 @@ function SlideRendererBase({
   const hasImage = !!slide.image_url && !isCenteredSlide;
 
   // Cap bullets at 6 to prevent overflow; gracefully trims very long content.
-  const cappedContent = (slide.content || []).slice(0, 6);
+  const cappedContent = (slide.content || []).slice(0, 8);
 
   // Auto-shrink wrapper: scales down font when content would overflow the slide box.
   // Floor at 0.65 so text stays legible — generation guarantees content fits.
   const { ref: fitRef } = useAutoShrink<HTMLDivElement>(
     [cleanTitle, cappedContent.join("|"), hasImage, isCenteredSlide],
-    { min: 0.65, max: 1, step: 0.05 }
+    { min: 0.72, max: 1, step: 0.05 }
   );
 
   return (
@@ -82,7 +82,7 @@ function SlideRendererBase({
               "font-bold leading-[1.1] mb-[0.55em] tracking-tight break-words",
               titleClr,
               // ≈ 44-56px on a 1080p canvas (fontSize base = 32)
-              isCenteredSlide ? "text-[3.4em]" : "text-[2.6em]"
+              isCenteredSlide ? "text-[3.6em]" : "text-[2.8em]"
             )}>
               {cleanTitle}
             </h2>
@@ -99,10 +99,10 @@ function SlideRendererBase({
                       "flex items-start gap-[0.6em] font-medium break-words",
                       textClr,
                       // ≈ 22-26px on a 1080p canvas
-                      isCenteredSlide ? "text-[1.4em] justify-center leading-relaxed"
-                                       : "text-[1.3em] leading-[1.45]",
+                      isCenteredSlide ? "text-[1.5em] justify-center leading-relaxed"
+                                       : "text-[1.4em] leading-[1.5]",
                       isExample && "italic opacity-90",
-                      isFormula && "font-mono text-center justify-center text-[1.45em]",
+                      isFormula && "font-mono text-center justify-center text-[1.55em]",
                     )}>
                       {!isCenteredSlide && !isFormula && (
                         <span className={cn(
