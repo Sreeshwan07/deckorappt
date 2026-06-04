@@ -59,99 +59,130 @@ export async function exportToPptx(
   slides: SlideData[],
   templateId: string
 ): Promise<void> {
+  if (!slides || slides.length === 0) throw new Error("No slides to export");
+
   const t = templates[templateId] || templates["executive-modern"] || templates.business;
   const pptx = new pptxgenjs();
   pptx.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 in
-  pptx.title = presentationTitle;
+  pptx.title = presentationTitle || "Presentation";
+  pptx.author = "Deckora";
+  pptx.company = "Deckora";
+
+  const hexBg = (t.exportBg || "#FFFFFF").replace("#", "");
+  const hexAccent = (t.exportAccentColor || "#F97316").replace("#", "");
+  const hexTitle = (t.exportTitleColor || "#0F172A").replace("#", "");
+  const hexText = (t.exportTextColor || "#1F2937").replace("#", "");
+  const fontFamily = t.fontFamily || "Calibri";
 
   for (let idx = 0; idx < slides.length; idx++) {
     const slide = slides[idx];
     const pptSlide = pptx.addSlide();
+    const title = (slide.title || `Slide ${idx + 1}`).toString();
     const isTitleSlide = idx === 0;
-    const isThankYou = slide.title.toLowerCase().includes("thank you");
+    const isThankYou = title.toLowerCase().includes("thank you");
     const isCenteredSlide = isTitleSlide || isThankYou;
     const hasImage = !!slide.image_url && !isCenteredSlide;
 
-    pptSlide.background = { color: t.exportBg.replace("#", "") };
+    pptSlide.background = { color: hexBg };
 
     if (!isCenteredSlide) {
-      pptSlide.addShape(pptxgenjs.ShapeType.rect, {
-        x: 0, y: 0, w: "100%", h: 0.07,
-        fill: { color: t.exportAccentColor.replace("#", "") },
-        line: { color: t.exportAccentColor.replace("#", ""), width: 0 },
+      // Use string shape name — avoids `pptxgenjs.ShapeType` access issues in some bundlers.
+      pptSlide.addShape("rect" as any, {
+        x: 0, y: 0, w: 13.33, h: 0.08,
+        fill: { color: hexAccent },
+        line: { color: hexAccent, width: 0 },
       });
     }
 
     const textWidth = hasImage ? 7.3 : (isCenteredSlide ? 11.33 : 11.73);
 
-    // Title — 44pt content / 52pt title slide
-    pptSlide.addText(slide.title, {
+    pptSlide.addText(title, {
       x: isCenteredSlide ? 1 : 0.8,
       y: isCenteredSlide ? 2.0 : 0.4,
       w: textWidth,
       h: 1.4,
       fontSize: isCenteredSlide ? 52 : 38,
-      fontFace: t.fontFamily,
-      color: t.exportTitleColor.replace("#", ""),
+      fontFace: fontFamily,
+      color: hexTitle,
       bold: true,
       align: isCenteredSlide ? "center" : "left",
       valign: "middle",
     });
 
-    // Body bullets — cap to 6, auto-shrink past 4
-    const body = (slide.content || []).slice(0, 6);
+    const body = (slide.content || []).filter((b) => b && b.toString().trim()).slice(0, 6);
     if (body.length > 0) {
       const sizeForCount = body.length <= 3 ? 24 : body.length <= 4 ? 22 : body.length <= 5 ? 20 : 18;
-      const bulletText = body.map((b) => {
+
+      // CRITICAL: each item must set breakLine:true (except the last) so pptxgenjs
+      // emits separate paragraphs — otherwise bullets/align/spacing collapse.
+      const bulletText = body.map((raw, i) => {
+        const b = raw.toString();
         const isExample = b.startsWith("Example:");
         const isFormula = b.startsWith("Formula:") || b.startsWith("Equation:");
         const isParagraph = b.length > 120 && !isExample && !isFormula;
+        const useBullet = !isCenteredSlide && !isFormula && !isParagraph;
         return {
           text: b,
           options: {
             fontSize: isCenteredSlide ? 22 : (isParagraph ? Math.min(sizeForCount, 20) : sizeForCount),
-            color: isExample ? "B8860B" : t.exportTextColor.replace("#", ""),
+            color: isExample ? "B8860B" : hexText,
             italic: isExample,
             bold: isFormula,
-            fontFace: isFormula ? "Consolas" : t.fontFamily,
-            bullet: isCenteredSlide || isParagraph || isFormula
-              ? false
-              : { code: "25CF", color: t.exportAccentColor.replace("#", "") },
-            paraSpaceBefore: 6,
+            fontFace: isFormula ? "Consolas" : fontFamily,
+            bullet: useBullet ? { code: "25CF" } : false,
+            paraSpaceBefore: 4,
             paraSpaceAfter: 6,
             align: (isCenteredSlide || isFormula ? "center" : "left") as "center" | "left",
+            breakLine: i < body.length - 1,
           },
         };
       });
+
       pptSlide.addText(bulletText as any, {
         x: isCenteredSlide ? 2 : 0.9,
         y: isCenteredSlide ? 3.6 : 1.8,
         w: hasImage ? 6.5 : (isCenteredSlide ? 9.33 : 11.5),
         h: isCenteredSlide ? 3.0 : 5.2,
-        fontFace: t.fontFamily,
+        fontFace: fontFamily,
         valign: "top",
       });
     }
 
     if (hasImage && slide.image_url) {
-      const data = await urlToBase64(slide.image_url);
-      if (data) {
-        try {
+      try {
+        const data = await urlToBase64(slide.image_url);
+        if (data && data.startsWith("data:image/")) {
           pptSlide.addImage({ data, x: 8.3, y: 1.2, w: 4.7, h: 4.8, sizing: { type: "contain", w: 4.7, h: 4.8 } });
-        } catch { /* skip */ }
+        }
+      } catch (e) {
+        console.warn(`[pptx] skipped image on slide ${idx + 1}:`, e);
       }
     }
 
-    if (slide.speaker_notes) pptSlide.addNotes(slide.speaker_notes);
+    if (slide.speaker_notes) {
+      try { pptSlide.addNotes(slide.speaker_notes); } catch { /* notes optional */ }
+    }
 
     pptSlide.addText(`${idx + 1} / ${slides.length}`, {
       x: 11.5, y: 7.0, w: 1.5, h: 0.4,
-      fontSize: 10, color: t.exportTextColor.replace("#", ""),
+      fontSize: 10, color: hexText,
       align: "right", transparency: 50,
     });
   }
 
-  await pptx.writeFile({ fileName: `${sanitizeFilename(presentationTitle)}.pptx` });
+  const fileName = `${sanitizeFilename(presentationTitle)}.pptx`;
+  try {
+    const result = await pptx.writeFile({ fileName });
+    console.info("[pptx] export complete:", result, `(${slides.length} slides)`);
+  } catch (err) {
+    // Manual fallback: build blob ourselves and save via file-saver.
+    console.error("[pptx] writeFile failed, using manual blob fallback:", err);
+    const blob = (await pptx.write({ outputType: "blob" })) as Blob;
+    if (!blob || blob.size < 1024) {
+      throw new Error("PPTX generation produced an empty file. Please retry.");
+    }
+    saveAs(blob, fileName);
+  }
 }
 
 /* ------------------------------------------------------------------ */
