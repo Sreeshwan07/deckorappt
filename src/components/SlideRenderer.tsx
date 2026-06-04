@@ -82,7 +82,7 @@ function SlideRendererBase({
               "font-bold leading-[1.1] mb-[0.55em] tracking-tight break-words",
               titleClr,
               // ≈ 44-56px on a 1080p canvas (fontSize base = 32)
-              isCenteredSlide ? "text-[3.4em]" : "text-[2.6em]"
+              isCenteredSlide ? "text-[3.6em]" : "text-[2.8em]"
             )}>
               {cleanTitle}
             </h2>
