@@ -99,10 +99,10 @@ function SlideRendererBase({
                       "flex items-start gap-[0.6em] font-medium break-words",
                       textClr,
                       // ≈ 22-26px on a 1080p canvas
-                      isCenteredSlide ? "text-[1.4em] justify-center leading-relaxed"
-                                       : "text-[1.3em] leading-[1.45]",
+                      isCenteredSlide ? "text-[1.5em] justify-center leading-relaxed"
+                                       : "text-[1.4em] leading-[1.5]",
                       isExample && "italic opacity-90",
-                      isFormula && "font-mono text-center justify-center text-[1.45em]",
+                      isFormula && "font-mono text-center justify-center text-[1.55em]",
                     )}>
                       {!isCenteredSlide && !isFormula && (
                         <span className={cn(
