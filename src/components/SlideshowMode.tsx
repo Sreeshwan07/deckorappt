@@ -67,7 +67,7 @@ export default function SlideshowMode({ slides, templateId, currentSlide, onSlid
               marginTop: -BASE_H / 2,
               transform: `scale(${scale})`,
               transformOrigin: "center center",
-              fontSize: 32,
+              fontSize: 38,
             }}
           >
             <SlideRenderer
