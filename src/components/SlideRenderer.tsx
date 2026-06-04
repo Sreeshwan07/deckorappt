@@ -52,7 +52,7 @@ function SlideRendererBase({
   // Floor at 0.65 so text stays legible — generation guarantees content fits.
   const { ref: fitRef } = useAutoShrink<HTMLDivElement>(
     [cleanTitle, cappedContent.join("|"), hasImage, isCenteredSlide],
-    { min: 0.65, max: 1, step: 0.05 }
+    { min: 0.72, max: 1, step: 0.05 }
   );
 
   return (
