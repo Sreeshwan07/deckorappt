@@ -46,7 +46,7 @@ function SlideRendererBase({
   const hasImage = !!slide.image_url && !isCenteredSlide;
 
   // Cap bullets at 6 to prevent overflow; gracefully trims very long content.
-  const cappedContent = (slide.content || []).slice(0, 6);
+  const cappedContent = (slide.content || []).slice(0, 8);
 
   // Auto-shrink wrapper: scales down font when content would overflow the slide box.
   // Floor at 0.65 so text stays legible — generation guarantees content fits.
