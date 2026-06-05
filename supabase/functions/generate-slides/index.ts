@@ -116,14 +116,15 @@ serve(async (req) => {
     if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
 
     // ── Input ──────────────────────────────────────────────────────
-    const { topic, numSlides, tone, template } = await req.json();
+    const { topic, numSlides, tone, template, mode } = await req.json();
     if (!topic || typeof topic !== "string" || topic.length > 500)
       return json({ error: "Invalid topic" }, 400);
     const slideCount = Math.min(Math.max(numSlides || 8, 5), 20);
     const modeKey = (tone || "professional").toLowerCase();
+    const presetKey = (mode || "").toLowerCase();
 
     // ── Cache lookup ───────────────────────────────────────────────
-    const cacheKey = `${modeKey}|${slideCount}|${topic.trim().toLowerCase()}`;
+    const cacheKey = `${modeKey}|${presetKey}|${slideCount}|${topic.trim().toLowerCase()}`;
     const cached = cacheGet(cacheKey);
     if (cached) return json({ slides: cached, cached: true });
 
@@ -158,10 +159,20 @@ EDUCATIONAL MODE — ADDITIONAL REQUIREMENTS:
 • Avoid one-liner generic bullets ("It is important", "Used widely"). Every bullet must convey a fact, mechanism, value, comparison, or example.
 ` : "";
 
+    const PRESETS: Record<string, string> = {
+      business:   "PRESET: BUSINESS — corporate strategy deck. Emphasize KPIs, market data, frameworks (SWOT, Porter's), ROI. Executive tone.",
+      education:  "PRESET: EDUCATION — student/classroom deck. Definitions, worked examples, diagrams-implied, syllabus coverage.",
+      research:   "PRESET: RESEARCH — academic deck. Sections: Abstract, Hypothesis, Methodology, Results, Discussion, References. Cite-style language.",
+      marketing:  "PRESET: MARKETING — campaign deck. Audience persona, positioning, channel mix, funnel metrics, creative hooks.",
+      pitch:      "PRESET: STARTUP PITCH — investor deck. Problem, Solution, Market Size (TAM/SAM/SOM), Traction, Business Model, Team, Ask.",
+      portfolio:  "PRESET: PORTFOLIO — personal showcase. Featured projects, role/impact, skills, outcomes, testimonial-style takeaways.",
+    };
+    const presetBlock = PRESETS[presetKey] ? `\n${PRESETS[presetKey]}\n` : "";
+
     const systemPrompt = `You are a senior presentation engine. You output strictly structured JSON for ${slideCount} slides.
 
 ${modeBlock}
-
+${presetBlock}
 TOPIC TYPE detected: ${info.type.toUpperCase()}${info.hasFormula ? " (formula-bearing)" : ""}
 
 SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE content. Do not deviate from order or count.

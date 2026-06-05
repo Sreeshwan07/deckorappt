@@ -8,16 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, AlertCircle, ExternalLink } from "lucide-react";
+import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, AlertCircle, ExternalLink, FlaskConical, Megaphone, Rocket, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { templateList } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
 
-const tones = [
-  { value: "professional", label: "Professional", icon: Briefcase, desc: "Clean & corporate" },
-  { value: "creative", label: "Creative", icon: Palette, desc: "Bold & visual" },
-  { value: "educational", label: "Educational", icon: GraduationCap, desc: "Clear & structured" },
+// Presentation modes — each maps to an internal "tone" + a prompt preset.
+const modes = [
+  { value: "business",   tone: "professional", label: "Business",   icon: Briefcase,     desc: "KPIs, strategy, ROI" },
+  { value: "education",  tone: "educational",  label: "Education",  icon: GraduationCap, desc: "Syllabus, definitions" },
+  { value: "research",   tone: "professional", label: "Research",   icon: FlaskConical,  desc: "Methodology, results" },
+  { value: "marketing",  tone: "creative",     label: "Marketing",  icon: Megaphone,     desc: "Campaigns, audience" },
+  { value: "pitch",      tone: "professional", label: "Startup Pitch", icon: Rocket,    desc: "TAM, traction, ask" },
+  { value: "portfolio",  tone: "creative",     label: "Portfolio",  icon: User,          desc: "Projects, impact" },
 ];
 
 export default function CreatePresentation() {
@@ -27,7 +31,8 @@ export default function CreatePresentation() {
   const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
   const [numSlides, setNumSlides] = useState(7);
-  const [tone, setTone] = useState("professional");
+  const [mode, setMode] = useState("business");
+  const tone = modes.find((m) => m.value === mode)?.tone || "professional";
   const [template, setTemplate] = useState("executive-modern");
   const [generating, setGenerating] = useState(false);
   const [creditsError, setCreditsError] = useState<string | null>(null);
@@ -53,7 +58,7 @@ export default function CreatePresentation() {
       createdPresId = pres.id;
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
-        body: { topic: topic.trim(), numSlides, tone, template },
+        body: { topic: topic.trim(), numSlides, tone, template, mode },
       });
       if (aiError) {
         // surface real reason (402 credits / 429 rate-limit / etc.)
@@ -127,20 +132,20 @@ export default function CreatePresentation() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Tone</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {tones.map((t) => (
+              <Label className="text-base font-semibold">Presentation Mode</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {modes.map((m) => (
                   <button
-                    key={t.value}
-                    onClick={() => setTone(t.value)}
+                    key={m.value}
+                    onClick={() => setMode(m.value)}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
-                      tone === t.value ? "border-primary bg-primary/10 glow-purple-sm" : "border-border bg-secondary/20 hover:border-primary/30"
+                      mode === m.value ? "border-primary bg-primary/10 glow-purple-sm" : "border-border bg-secondary/20 hover:border-primary/30"
                     )}
                   >
-                    <t.icon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium text-foreground">{t.label}</span>
-                    <span className="text-[10px] text-muted-foreground">{t.desc}</span>
+                    <m.icon className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium text-foreground">{m.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{m.desc}</span>
                   </button>
                 ))}
               </div>
