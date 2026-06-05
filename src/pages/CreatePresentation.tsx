@@ -8,16 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, AlertCircle, ExternalLink } from "lucide-react";
+import { Loader2, Sparkles, Briefcase, Palette, GraduationCap, AlertCircle, ExternalLink, FlaskConical, Megaphone, Rocket, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { templateList } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
 
-const tones = [
-  { value: "professional", label: "Professional", icon: Briefcase, desc: "Clean & corporate" },
-  { value: "creative", label: "Creative", icon: Palette, desc: "Bold & visual" },
-  { value: "educational", label: "Educational", icon: GraduationCap, desc: "Clear & structured" },
+// Presentation modes — each maps to an internal "tone" + a prompt preset.
+const modes = [
+  { value: "business",   tone: "professional", label: "Business",   icon: Briefcase,     desc: "KPIs, strategy, ROI" },
+  { value: "education",  tone: "educational",  label: "Education",  icon: GraduationCap, desc: "Syllabus, definitions" },
+  { value: "research",   tone: "professional", label: "Research",   icon: FlaskConical,  desc: "Methodology, results" },
+  { value: "marketing",  tone: "creative",     label: "Marketing",  icon: Megaphone,     desc: "Campaigns, audience" },
+  { value: "pitch",      tone: "professional", label: "Startup Pitch", icon: Rocket,    desc: "TAM, traction, ask" },
+  { value: "portfolio",  tone: "creative",     label: "Portfolio",  icon: User,          desc: "Projects, impact" },
 ];
 
 export default function CreatePresentation() {
