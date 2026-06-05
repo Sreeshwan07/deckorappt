@@ -132,20 +132,20 @@ export default function CreatePresentation() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Tone</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {tones.map((t) => (
+              <Label className="text-base font-semibold">Presentation Mode</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {modes.map((m) => (
                   <button
-                    key={t.value}
-                    onClick={() => setTone(t.value)}
+                    key={m.value}
+                    onClick={() => setMode(m.value)}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
-                      tone === t.value ? "border-primary bg-primary/10 glow-purple-sm" : "border-border bg-secondary/20 hover:border-primary/30"
+                      mode === m.value ? "border-primary bg-primary/10 glow-purple-sm" : "border-border bg-secondary/20 hover:border-primary/30"
                     )}
                   >
-                    <t.icon className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium text-foreground">{t.label}</span>
-                    <span className="text-[10px] text-muted-foreground">{t.desc}</span>
+                    <m.icon className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium text-foreground">{m.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{m.desc}</span>
                   </button>
                 ))}
               </div>
