@@ -58,7 +58,7 @@ export default function CreatePresentation() {
       createdPresId = pres.id;
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
-        body: { topic: topic.trim(), numSlides, tone, template },
+        body: { topic: topic.trim(), numSlides, tone, template, mode },
       });
       if (aiError) {
         // surface real reason (402 credits / 429 rate-limit / etc.)
