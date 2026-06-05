@@ -31,7 +31,8 @@ export default function CreatePresentation() {
   const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
   const [numSlides, setNumSlides] = useState(7);
-  const [tone, setTone] = useState("professional");
+  const [mode, setMode] = useState("business");
+  const tone = modes.find((m) => m.value === mode)?.tone || "professional";
   const [template, setTemplate] = useState("executive-modern");
   const [generating, setGenerating] = useState(false);
   const [creditsError, setCreditsError] = useState<string | null>(null);
