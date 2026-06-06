@@ -55,28 +55,37 @@ function classifyTopic(topic: string): { type: TopicType; hasFormula: boolean } 
 
 /* The full Professional ordering. Trim to slideCount intelligently. */
 function buildSlidePlan(slideCount: number, info: { type: TopicType; hasFormula: boolean }): string[] {
-  // Each entry maps to a layout slot: title/agenda/intro/content/formula/pros_cons/comparison/summary/thanks
+  // Consulting-grade ordering inspired by McKinsey/Deloitte/Gartner decks.
   const full: { slot: string; section: string; required?: boolean }[] = [
     { slot: "title",      section: "Title",                          required: true },
     { slot: "intro",      section: "Agenda / Overview",              required: true },
-    { slot: "intro",      section: "Introduction & Definition",      required: true },
+    { slot: "intro",      section: "Executive Summary",              required: true },
+    { slot: "intro",      section: "Introduction & Context" },
+    { slot: "content",    section: "Background & Definitions" },
     { slot: "content",    section: "Core Concepts" },
     { slot: "content",    section: "Key Components" },
     { slot: "content",    section: "Working / Architecture" },
+    { slot: "content",    section: "Detailed Analysis" },
+    { slot: "content",    section: "Market / Industry Landscape" },
+    { slot: "content",    section: "Data & Insights" },
     { slot: "content",    section: "Examples" },
-    { slot: "pros_cons",  section: "Advantages & Disadvantages" },
+    { slot: "content",    section: "Case Study" },
+    { slot: "pros_cons",  section: "Strengths & Weaknesses" },
     { slot: "comparison", section: "Comparison" },
+    { slot: "content",    section: "Frameworks & Process" },
     { slot: "content",    section: "Applications / Use Cases" },
     { slot: "formula",    section: "Important Formulas" },
-    { slot: "content",    section: "Case Study" },
-    { slot: "summary",    section: "Summary",                        required: true },
+    { slot: "pros_cons",  section: "Challenges & Solutions" },
+    { slot: "content",    section: "Risks & Mitigations" },
+    { slot: "content",    section: "Future Trends & Outlook" },
+    { slot: "content",    section: "Strategic Recommendations" },
+    { slot: "content",    section: "Implementation Roadmap" },
+    { slot: "content",    section: "Key Takeaways" },
+    { slot: "summary",    section: "Conclusion",                     required: true },
+    { slot: "intro",      section: "Q&A" },
     { slot: "thanks",     section: "Thank You",                      required: true },
   ];
-  // Topic-aware filtering
-  if (info.type === "history") {
-    full.splice(full.findIndex(x => x.section === "Important Formulas"), 1);
-  }
-  if (info.type === "business") {
+  if (info.type === "history" || info.type === "business") {
     const i = full.findIndex(x => x.section === "Important Formulas");
     if (i >= 0) full.splice(i, 1);
   }
@@ -84,19 +93,29 @@ function buildSlidePlan(slideCount: number, info: { type: TopicType; hasFormula:
     const i = full.findIndex(x => x.slot === "formula");
     if (i >= 0) full.splice(i, 1);
   }
-  // Now trim/expand to exact slideCount
   const required = full.filter(x => x.required);
   const optional = full.filter(x => !x.required);
   const need = slideCount - required.length;
   const picked = optional.slice(0, Math.max(0, need));
-  // Re-assemble respecting original order
   const keepSet = new Set([...required, ...picked]);
   const planned = full.filter(x => keepSet.has(x)).map(x => `${x.slot}::${x.section}`);
-  // If still short (deck > full list), pad with extra content slides
   while (planned.length < slideCount) {
     planned.splice(planned.length - 2, 0, `content::Deeper Dive ${planned.length}`);
   }
   return planned.slice(0, slideCount);
+}
+
+// Heuristic: estimate optimal slide count from topic complexity (10–30).
+function autoSlideCount(topic: string, info: { type: TopicType; hasFormula: boolean }): number {
+  const words = topic.trim().split(/\s+/).length;
+  let n = 14;
+  if (words >= 6) n += 3;
+  if (words >= 10) n += 3;
+  if (info.type === "engineering" || info.type === "research" || info.type === "business") n += 3;
+  if (info.hasFormula) n += 2;
+  if (/comprehensive|complete|deep|in[- ]depth|full|detailed|advanced/i.test(topic)) n += 4;
+  if (/overview|intro|brief|short|quick/i.test(topic)) n -= 3;
+  return Math.min(30, Math.max(10, n));
 }
 
 serve(async (req) => {
@@ -116,23 +135,29 @@ serve(async (req) => {
     if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
 
     // ── Input ──────────────────────────────────────────────────────
-    const { topic, numSlides, tone, template, mode } = await req.json();
+    const { topic, numSlides, tone, template, mode, auto } = await req.json();
     if (!topic || typeof topic !== "string" || topic.length > 500)
       return json({ error: "Invalid topic" }, 400);
-    const slideCount = Math.min(Math.max(numSlides || 8, 5), 20);
     const modeKey = (tone || "professional").toLowerCase();
     const presetKey = (mode || "").toLowerCase();
 
+    // ── Topic classification ───────────────────────────────────────
+    const info = classifyTopic(topic);
+
+    // Dynamic slide count: when auto=true OR numSlides falsy, infer 10–30.
+    const slideCount = (auto || !numSlides)
+      ? autoSlideCount(topic, info)
+      : Math.min(Math.max(numSlides, 5), 30);
+
     // ── Cache lookup ───────────────────────────────────────────────
-    const cacheKey = `${modeKey}|${presetKey}|${slideCount}|${topic.trim().toLowerCase()}`;
+    const cacheKey = `v2|${modeKey}|${presetKey}|${slideCount}|${topic.trim().toLowerCase()}`;
     const cached = cacheGet(cacheKey);
     if (cached) return json({ slides: cached, cached: true });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // ── Topic classification & plan ────────────────────────────────
-    const info = classifyTopic(topic);
+    // ── Build plan ─────────────────────────────────────────────────
     const plan = buildSlidePlan(slideCount, info);
     const planList = plan.map((p, i) => `  ${i + 1}. [${p.split("::")[0]}] ${p.split("::")[1]}`).join("\n");
 
@@ -148,15 +173,18 @@ serve(async (req) => {
    • Prefix illustrative examples with "Example: " and formulas with "Formula: ".`
       : modeKey === "creative"
         ? "MODE: CREATIVE — storytelling deck. Punchy, evocative. 2-3 bullets/slide, 8-14 words each."
-        : "MODE: PROFESSIONAL — corporate/investor deck. Executive, KPIs, frameworks. 3-4 bullets/slide, 10-18 words each.";
+        : `MODE: PROFESSIONAL — premium consulting-grade deck (McKinsey / Deloitte / Gartner quality).
+   • Executive vocabulary, industry-standard terminology, MECE structure.
+   • 3–5 substantive bullets per content slide, each 14–28 words. NO filler, NO repetition.
+   • Where relevant, cite concrete statistics, % figures, frameworks, vendors, or named case studies.
+   • Frame analysis with recognised models (SWOT, Porter's 5, PESTEL, BCG, value chain, 4Ps, AARRR) where appropriate.`;
 
     const educationalRules = isEducational ? `
 EDUCATIONAL MODE — ADDITIONAL REQUIREMENTS:
 • The first content slide after the Agenda MUST start with a formal "Definition: ..." bullet.
 • Dedicate slides to: Definition, Key Concepts, Working/Process, Examples, Advantages, Disadvantages, Applications, and (where relevant) Formulas.
-• Expand important sub-topics into their OWN slides rather than cramming. Better to have 5 deep slides than 8 thin ones.
+• Expand important sub-topics into their OWN slides rather than cramming.
 • Where a formula exists, ALSO include a "variables" list (Symbol = meaning + unit) AND a worked numerical example.
-• Avoid one-liner generic bullets ("It is important", "Used widely"). Every bullet must convey a fact, mechanism, value, comparison, or example.
 ` : "";
 
     const PRESETS: Record<string, string> = {
@@ -169,34 +197,37 @@ EDUCATIONAL MODE — ADDITIONAL REQUIREMENTS:
     };
     const presetBlock = PRESETS[presetKey] ? `\n${PRESETS[presetKey]}\n` : "";
 
-    const systemPrompt = `You are a senior presentation engine. You output strictly structured JSON for ${slideCount} slides.
+    const systemPrompt = `You are a senior presentation engine producing premium, consulting-grade decks. You output strictly structured JSON for ${slideCount} slides.
 
 ${modeBlock}
 ${presetBlock}
 TOPIC TYPE detected: ${info.type.toUpperCase()}${info.hasFormula ? " (formula-bearing)" : ""}
 
-SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE content. Do not deviate from order or count.
+SLIDE PLAN — fill EACH slot below with REAL, SUBSTANTIVE, NON-REPEATING content. Do not deviate from order or count.
 ${planList}
 ${educationalRules}
 LAYOUT SCHEMA per slot:
-- title       → { layout:"title", title, subtitle }
-- intro       → { layout:"intro", title, paragraph (${isEducational ? "50-80" : "28-40"} words, definition + context) }
-- content     → { layout:"content", title, bullets[${isEducational ? "4-6" : "3-5"}] (each ${isEducational ? "18-32" : "12-22"} words, substantive) }
-- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ${isEducational ? "≤22" : "≤14"} words) }
-- comparison  → { layout:"comparison", title, left{title,points[3-4]}, right{title,points[3-4]} }
-- formula     → { layout:"formula", title, formula (clean ASCII like "y = mx + c" or "F = G·m₁·m₂/r²"), variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ${isEducational ? "≤45" : "≤30"} words) }
-- summary     → { layout:"summary", title:"Summary", bullets[3-5] (≤${isEducational ? "20" : "14"} words, impactful takeaways) }
-- thanks      → { layout:"thanks", title:"Thank You", subtitle:"Questions?" }
+- title       → { layout:"title", title, subtitle (a one-line value proposition, ≤14 words) }
+- intro       → { layout:"intro", title, paragraph (${isEducational ? "50-80" : "45-75"} words, executive narrative with context + thesis) }
+- content     → { layout:"content", title, bullets[${isEducational ? "4-6" : "3-5"}] (each ${isEducational ? "18-32" : "14-28"} words, substantive, data-rich) }
+- pros_cons   → { layout:"pros_cons", title, pros[3-4], cons[3-4] (each ≤22 words, concrete) }
+- comparison  → { layout:"comparison", title, left{title,points[3-4]}, right{title,points[3-4]} (use for vs/then-vs-now/option A vs B) }
+- formula     → { layout:"formula", title, formula, variables[3-5] ("Symbol = meaning + unit"), example (worked numerical, ≤45 words) }
+- summary     → { layout:"summary", title:"Conclusion", bullets[4-5] (≤18 words, strategic takeaways + recommendations) }
+- thanks      → { layout:"thanks", title:"Thank You", subtitle:"Questions & Discussion" }
 
 ABSOLUTE RULES (failures = bad slide):
-1. NEVER produce a slide that contains only the title or only the topic name. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
-2. NO emojis, NO decorative symbols (★ ✨ 🚀 → • ◆), NO markdown (** __ ##), NO trailing punctuation in titles.
-3. Bullets are SINGLE-SENTENCE, ZERO filler. Concrete > vague.
-4. Titles ≤8 words, Title Case.
-5. For formula slot: write the formula as a clean string (use unicode subscripts/superscripts where natural). Provide 3-5 variable definitions with units. Provide a numerical worked example.
-6. For pros_cons / comparison: provide BOTH sides with 3-4 substantive points each.
-7. Cover the topic's STANDARD academic syllabus thoroughly across the chosen sections.
-8. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic. Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
+1. EVERY slide MUST include a "notes" field of 35-70 words: a speaker-notes script the presenter reads aloud. Conversational, expands on bullets, NOT a copy of them.
+2. NEVER produce a slide that contains only the title. Every content/intro/pros_cons/comparison/formula slide MUST have meaningful body content.
+3. NO emojis, NO decorative symbols (★ ✨ 🚀 → • ◆), NO markdown (** __ ##), NO trailing punctuation in titles.
+4. Bullets are SINGLE-SENTENCE, ZERO filler. Concrete > vague. Prefer numbers, %s, named examples, vendors, dates.
+5. Titles ≤8 words, Title Case. Each slide title must be UNIQUE across the deck.
+6. NO repetition of points across slides. Each slide must add unique value. If two slides would say the same thing, drop one.
+7. For comparison/pros_cons: BOTH sides need 3-4 substantive, non-overlapping points.
+8. For Data & Insights / Market Landscape / Trends slides: include at least one concrete statistic, growth rate, market size, or benchmark.
+9. For Frameworks/Process slides: lay out an explicit numbered or staged sequence (Step 1 → Step 2 → ...).
+10. For Recommendations/Roadmap slides: each bullet must be ACTIONABLE (verb-led: "Deploy...", "Adopt...", "Migrate...").
+11. image_query: 1-3 stock-photo keywords directly relevant to the slide sub-topic. Provide for content/intro slides only. Omit for title/summary/thanks/formula/pros_cons/comparison.
 
 Return JSON ONLY: { "slides": [ ... exactly ${slideCount} ... ] } with layouts matching the plan order above.`;
 
