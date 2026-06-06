@@ -55,28 +55,37 @@ function classifyTopic(topic: string): { type: TopicType; hasFormula: boolean } 
 
 /* The full Professional ordering. Trim to slideCount intelligently. */
 function buildSlidePlan(slideCount: number, info: { type: TopicType; hasFormula: boolean }): string[] {
-  // Each entry maps to a layout slot: title/agenda/intro/content/formula/pros_cons/comparison/summary/thanks
+  // Consulting-grade ordering inspired by McKinsey/Deloitte/Gartner decks.
   const full: { slot: string; section: string; required?: boolean }[] = [
     { slot: "title",      section: "Title",                          required: true },
     { slot: "intro",      section: "Agenda / Overview",              required: true },
-    { slot: "intro",      section: "Introduction & Definition",      required: true },
+    { slot: "intro",      section: "Executive Summary",              required: true },
+    { slot: "intro",      section: "Introduction & Context" },
+    { slot: "content",    section: "Background & Definitions" },
     { slot: "content",    section: "Core Concepts" },
     { slot: "content",    section: "Key Components" },
     { slot: "content",    section: "Working / Architecture" },
+    { slot: "content",    section: "Detailed Analysis" },
+    { slot: "content",    section: "Market / Industry Landscape" },
+    { slot: "content",    section: "Data & Insights" },
     { slot: "content",    section: "Examples" },
-    { slot: "pros_cons",  section: "Advantages & Disadvantages" },
+    { slot: "content",    section: "Case Study" },
+    { slot: "pros_cons",  section: "Strengths & Weaknesses" },
     { slot: "comparison", section: "Comparison" },
+    { slot: "content",    section: "Frameworks & Process" },
     { slot: "content",    section: "Applications / Use Cases" },
     { slot: "formula",    section: "Important Formulas" },
-    { slot: "content",    section: "Case Study" },
-    { slot: "summary",    section: "Summary",                        required: true },
+    { slot: "pros_cons",  section: "Challenges & Solutions" },
+    { slot: "content",    section: "Risks & Mitigations" },
+    { slot: "content",    section: "Future Trends & Outlook" },
+    { slot: "content",    section: "Strategic Recommendations" },
+    { slot: "content",    section: "Implementation Roadmap" },
+    { slot: "content",    section: "Key Takeaways" },
+    { slot: "summary",    section: "Conclusion",                     required: true },
+    { slot: "intro",      section: "Q&A" },
     { slot: "thanks",     section: "Thank You",                      required: true },
   ];
-  // Topic-aware filtering
-  if (info.type === "history") {
-    full.splice(full.findIndex(x => x.section === "Important Formulas"), 1);
-  }
-  if (info.type === "business") {
+  if (info.type === "history" || info.type === "business") {
     const i = full.findIndex(x => x.section === "Important Formulas");
     if (i >= 0) full.splice(i, 1);
   }
@@ -84,19 +93,29 @@ function buildSlidePlan(slideCount: number, info: { type: TopicType; hasFormula:
     const i = full.findIndex(x => x.slot === "formula");
     if (i >= 0) full.splice(i, 1);
   }
-  // Now trim/expand to exact slideCount
   const required = full.filter(x => x.required);
   const optional = full.filter(x => !x.required);
   const need = slideCount - required.length;
   const picked = optional.slice(0, Math.max(0, need));
-  // Re-assemble respecting original order
   const keepSet = new Set([...required, ...picked]);
   const planned = full.filter(x => keepSet.has(x)).map(x => `${x.slot}::${x.section}`);
-  // If still short (deck > full list), pad with extra content slides
   while (planned.length < slideCount) {
     planned.splice(planned.length - 2, 0, `content::Deeper Dive ${planned.length}`);
   }
   return planned.slice(0, slideCount);
+}
+
+// Heuristic: estimate optimal slide count from topic complexity (10–30).
+function autoSlideCount(topic: string, info: { type: TopicType; hasFormula: boolean }): number {
+  const words = topic.trim().split(/\s+/).length;
+  let n = 14;
+  if (words >= 6) n += 3;
+  if (words >= 10) n += 3;
+  if (info.type === "engineering" || info.type === "research" || info.type === "business") n += 3;
+  if (info.hasFormula) n += 2;
+  if (/comprehensive|complete|deep|in[- ]depth|full|detailed|advanced/i.test(topic)) n += 4;
+  if (/overview|intro|brief|short|quick/i.test(topic)) n -= 3;
+  return Math.min(30, Math.max(10, n));
 }
 
 serve(async (req) => {
