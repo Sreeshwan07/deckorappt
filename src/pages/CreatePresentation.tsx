@@ -52,14 +52,14 @@ export default function CreatePresentation() {
     try {
       const { data: pres, error: presError } = await supabase
         .from("presentations")
-        .insert({ user_id: user.id, title: topic.trim(), topic: topic.trim(), num_slides: numSlides, tone, template, status: "generating" })
+        .insert({ user_id: user.id, title: topic.trim(), topic: topic.trim(), num_slides: autoSlides ? 0 : numSlides, tone, template, status: "generating" })
         .select()
         .single();
       if (presError) throw presError;
       createdPresId = pres.id;
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
-        body: { topic: topic.trim(), numSlides, tone, template, mode },
+        body: { topic: topic.trim(), numSlides: autoSlides ? undefined : numSlides, auto: autoSlides, tone, template, mode },
       });
       if (aiError) {
         // surface real reason (402 credits / 429 rate-limit / etc.)
