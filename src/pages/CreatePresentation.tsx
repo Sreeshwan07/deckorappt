@@ -127,9 +127,31 @@ export default function CreatePresentation() {
             </div>
 
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Number of Slides: <span className="text-primary">{numSlides}</span></Label>
-              <Slider value={[numSlides]} onValueChange={([v]) => setNumSlides(v)} min={5} max={20} step={1} className="w-full" />
-              <div className="flex justify-between text-xs text-muted-foreground"><span>5</span><span>10</span><span>15</span><span>20</span></div>
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">
+                  Number of Slides: <span className="text-primary">{autoSlides ? "Auto" : numSlides}</span>
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setAutoSlides((v) => !v)}
+                  className={cn(
+                    "text-xs px-3 py-1 rounded-full border transition-all",
+                    autoSlides ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  {autoSlides ? "Auto (10–30)" : "Manual"}
+                </button>
+              </div>
+              <Slider
+                value={[numSlides]}
+                onValueChange={([v]) => setNumSlides(v)}
+                min={5}
+                max={30}
+                step={1}
+                disabled={autoSlides}
+                className={cn("w-full", autoSlides && "opacity-40 pointer-events-none")}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground"><span>5</span><span>10</span><span>20</span><span>30</span></div>
             </div>
 
             <div className="space-y-3">
