@@ -30,8 +30,7 @@ export default function CreatePresentation() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [topic, setTopic] = useState("");
-  const [numSlides, setNumSlides] = useState(12);
-  const [autoSlides, setAutoSlides] = useState(true);
+  const [numSlides, setNumSlides] = useState(7);
   const [mode, setMode] = useState("business");
   const tone = modes.find((m) => m.value === mode)?.tone || "professional";
   const [template, setTemplate] = useState("executive-modern");
@@ -52,14 +51,14 @@ export default function CreatePresentation() {
     try {
       const { data: pres, error: presError } = await supabase
         .from("presentations")
-        .insert({ user_id: user.id, title: topic.trim(), topic: topic.trim(), num_slides: autoSlides ? 0 : numSlides, tone, template, status: "generating" })
+        .insert({ user_id: user.id, title: topic.trim(), topic: topic.trim(), num_slides: numSlides, tone, template, status: "generating" })
         .select()
         .single();
       if (presError) throw presError;
       createdPresId = pres.id;
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-slides", {
-        body: { topic: topic.trim(), numSlides: autoSlides ? undefined : numSlides, auto: autoSlides, tone, template, mode },
+        body: { topic: topic.trim(), numSlides, tone, template, mode },
       });
       if (aiError) {
         // surface real reason (402 credits / 429 rate-limit / etc.)
@@ -127,31 +126,9 @@ export default function CreatePresentation() {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">
-                  Number of Slides: <span className="text-primary">{autoSlides ? "Auto" : numSlides}</span>
-                </Label>
-                <button
-                  type="button"
-                  onClick={() => setAutoSlides((v) => !v)}
-                  className={cn(
-                    "text-xs px-3 py-1 rounded-full border transition-all",
-                    autoSlides ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40"
-                  )}
-                >
-                  {autoSlides ? "Auto (10–30)" : "Manual"}
-                </button>
-              </div>
-              <Slider
-                value={[numSlides]}
-                onValueChange={([v]) => setNumSlides(v)}
-                min={5}
-                max={30}
-                step={1}
-                disabled={autoSlides}
-                className={cn("w-full", autoSlides && "opacity-40 pointer-events-none")}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground"><span>5</span><span>10</span><span>20</span><span>30</span></div>
+              <Label className="text-base font-semibold">Number of Slides: <span className="text-primary">{numSlides}</span></Label>
+              <Slider value={[numSlides]} onValueChange={([v]) => setNumSlides(v)} min={5} max={20} step={1} className="w-full" />
+              <div className="flex justify-between text-xs text-muted-foreground"><span>5</span><span>10</span><span>15</span><span>20</span></div>
             </div>
 
             <div className="space-y-3">
