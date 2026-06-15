@@ -60,7 +60,9 @@ export type Database = {
           created_at: string
           id: string
           is_paid: boolean
+          is_public: boolean
           num_slides: number
+          share_token: string | null
           status: string
           template: string
           title: string
@@ -73,7 +75,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_paid?: boolean
+          is_public?: boolean
           num_slides?: number
+          share_token?: string | null
           status?: string
           template?: string
           title: string
@@ -86,7 +90,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_paid?: boolean
+          is_public?: boolean
           num_slides?: number
+          share_token?: string | null
           status?: string
           template?: string
           title?: string
