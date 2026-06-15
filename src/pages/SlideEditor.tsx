@@ -488,6 +488,10 @@ export default function SlideEditor() {
           onExit={() => setSlideshowActive(false)}
         />
       )}
+
+      {presentation && (
+        <ShareDialog open={shareOpen} onOpenChange={setShareOpen} presentationId={presentation.id} />
+      )}
     </div>
   );
 }
