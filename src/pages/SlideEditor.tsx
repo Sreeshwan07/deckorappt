@@ -13,10 +13,11 @@ import { exportPresentation, type ExportFormat } from "@/lib/export";
 import { useIsAdmin } from "@/lib/admin";
 import {
   ArrowLeft, Plus, Trash2, Download, Loader2, Pencil, Check, X,
-  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw, Play,
+  ChevronUp, ChevronDown, Presentation, Palette, Menu, FileText, ImageIcon, RefreshCw, Play, Share2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import ShareDialog from "@/components/ShareDialog";
 
 interface Slide {
   id: string;
@@ -53,6 +54,7 @@ export default function SlideEditor() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [generatingImage, setGeneratingImage] = useState<string | null>(null);
   const [slideshowActive, setSlideshowActive] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isAdmin = useIsAdmin();
@@ -266,6 +268,10 @@ export default function SlideEditor() {
 
           <Button variant="outline" size="sm" onClick={() => setSlideshowActive(true)} className="bg-secondary/30">
             <Play className="h-4 w-4" /> Present
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => setShareOpen(true)} className="bg-secondary/30">
+            <Share2 className="h-4 w-4" /> Share
           </Button>
 
           <div className="relative">
