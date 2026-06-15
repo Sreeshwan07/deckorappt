@@ -86,7 +86,8 @@ export default function SharedPresentation() {
       <SlideshowMode
         slides={slides}
         templateId={pres.template}
-        startIndex={current}
+        currentSlide={current}
+        onSlideChange={setCurrent}
         onExit={() => setSlideshow(false)}
       />
     );
