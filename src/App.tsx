@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard";
 import CreatePresentation from "./pages/CreatePresentation";
 import SlideEditor from "./pages/SlideEditor";
 import SharedPresentation from "./pages/SharedPresentation";
+import PendingApproval from "./pages/PendingApproval";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
