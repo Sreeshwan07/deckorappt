@@ -14,52 +14,28 @@ export type Database = {
   }
   public: {
     Tables: {
-      payments: {
+      app_config: {
         Row: {
-          amount: number
-          created_at: string
-          currency: string
-          id: string
-          payment_provider_id: string | null
-          presentation_id: string
-          status: string
-          user_id: string
+          key: string
+          updated_at: string
+          value: string
         }
         Insert: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          id?: string
-          payment_provider_id?: string | null
-          presentation_id: string
-          status?: string
-          user_id: string
+          key: string
+          updated_at?: string
+          value: string
         }
         Update: {
-          amount?: number
-          created_at?: string
-          currency?: string
-          id?: string
-          payment_provider_id?: string | null
-          presentation_id?: string
-          status?: string
-          user_id?: string
+          key?: string
+          updated_at?: string
+          value?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "payments_presentation_id_fkey"
-            columns: ["presentation_id"]
-            isOneToOne: false
-            referencedRelation: "presentations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       presentations: {
         Row: {
           created_at: string
           id: string
-          is_paid: boolean
           is_public: boolean
           num_slides: number
           share_token: string | null
@@ -74,7 +50,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          is_paid?: boolean
           is_public?: boolean
           num_slides?: number
           share_token?: string | null
@@ -89,7 +64,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          is_paid?: boolean
           is_public?: boolean
           num_slides?: number
           share_token?: string | null
@@ -100,6 +74,30 @@ export type Database = {
           topic?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          status: Database["public"]["Enums"]["user_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -173,6 +171,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_status: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["user_status"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -180,9 +182,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin_email: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
+      user_status: "pending" | "approved" | "rejected" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -311,6 +316,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      user_status: ["pending", "approved", "rejected", "suspended"],
     },
   },
 } as const
