@@ -31,8 +31,10 @@ import {
   Activity,
   TrendingUp,
   Zap,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsAdmin } from "@/lib/admin";
 import { templates } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
 import { cn } from "@/lib/utils";
@@ -50,7 +52,6 @@ interface PresentationRow {
   topic: string;
   template: string;
   status: string;
-  is_paid: boolean;
   created_at: string;
   updated_at: string;
   num_slides: number;
@@ -68,6 +69,7 @@ const sidebarItems = [
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin();
   const { toast } = useToast();
   const [presentations, setPresentations] = useState<PresentationRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,6 +227,15 @@ export default function Dashboard() {
               </button>
             );
           })}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <Shield className="h-4 w-4 text-primary" />
+              Admin Panel
+            </button>
+          )}
         </nav>
 
         <div className="px-3 py-3 border-t border-sidebar-border">
