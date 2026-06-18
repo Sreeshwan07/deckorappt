@@ -31,8 +31,10 @@ import {
   Activity,
   TrendingUp,
   Zap,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsAdmin } from "@/lib/admin";
 import { templates } from "@/lib/templates";
 import SlideRenderer from "@/components/SlideRenderer";
 import { cn } from "@/lib/utils";
