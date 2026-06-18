@@ -50,7 +50,6 @@ interface PresentationRow {
   topic: string;
   template: string;
   status: string;
-  is_paid: boolean;
   created_at: string;
   updated_at: string;
   num_slides: number;
