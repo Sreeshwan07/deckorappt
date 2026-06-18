@@ -188,10 +188,6 @@ export default function SlideEditor() {
   const handleExport = async (format: ExportFormat = "pptx") => {
     if (!presentation) return;
     setShowExportMenu(false);
-    if (!isAdmin && !presentation.is_paid) {
-      toast({ title: "Payment required", description: "₹20 per download. Payment integration coming soon!", variant: "destructive" });
-      return;
-    }
     setExporting(true);
     try {
       await exportPresentation(format, presentation.title, slides, presentation.template);
