@@ -227,6 +227,15 @@ export default function Dashboard() {
               </button>
             );
           })}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <Shield className="h-4 w-4 text-primary" />
+              Admin Panel
+            </button>
+          )}
         </nav>
 
         <div className="px-3 py-3 border-t border-sidebar-border">
