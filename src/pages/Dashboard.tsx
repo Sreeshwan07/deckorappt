@@ -69,6 +69,7 @@ const sidebarItems = [
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin();
   const { toast } = useToast();
   const [presentations, setPresentations] = useState<PresentationRow[]>([]);
   const [loading, setLoading] = useState(true);
