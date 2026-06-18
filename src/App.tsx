@@ -34,6 +34,8 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/share/:token" element={<SharedPresentation />} />
+            <Route path="/pending" element={<ProtectedRoute requireApproved={false}><PendingApproval /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePresentation /></ProtectedRoute>} />
             <Route path="/editor/:id" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
