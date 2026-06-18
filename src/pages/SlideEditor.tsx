@@ -32,7 +32,6 @@ interface PresentationData {
   id: string;
   title: string;
   template: string;
-  is_paid: boolean;
   topic: string;
 }
 
